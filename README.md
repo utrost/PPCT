@@ -34,6 +34,34 @@ question:
 
 ------------------------------------------------------------------------
 
+# Quick Start
+
+Generate the default A4 SVG target:
+
+```bash
+python3 -m ppct.cli --output output/ppct-a4.svg
+```
+
+Add metadata that will be printed onto the target:
+
+```bash
+python3 -m ppct.cli \
+  --output output/ppct-a4.svg \
+  --title "PPCT A4 Reference" \
+  --operator "Uwe" \
+  --date "2026-07-29"
+```
+
+Run the test suite:
+
+```bash
+python3 -m unittest discover -s tests -v
+```
+
+A generated reference SVG is included at `examples/ppct-a4.svg`.
+
+------------------------------------------------------------------------
+
 # Project Goals
 
 Version 0.x aims to:
@@ -62,19 +90,17 @@ Version 0.x aims to:
 ``` text
 ppct/
 ├── README.md
-├── docs/
-│   ├── specification.md
-│   ├── sop.md
-│   └── developer-guide.md
-├── generator/
+├── LICENSE
+├── pyproject.toml
 ├── ppct/
-│   ├── geometry/
-│   ├── layout/
-│   ├── sections/
-│   └── assets/
-├── output/
+│   ├── __init__.py
+│   ├── cli.py
+│   └── target.py
 ├── examples/
-└── tests/
+│   └── ppct-a4.svg
+├── tests/
+│   └── test_generator.py
+└── output/              # local generated files, ignored by git
 ```
 
 ------------------------------------------------------------------------
