@@ -23,11 +23,16 @@ git clone https://github.com/utrost/PPCT.git
 cd PPCT
 ```
 
-Generate the default target:
+Generate the default target from the command line:
 
 ```bash
 python3 -m ppct.cli --output output/ppct-a4.svg
 ```
+
+Or use the browser generator after deployment:
+
+- GitHub Pages: `https://utrost.github.io/PPCT/`
+- simiono.com: `https://simiono.com/ppct/`
 
 Generate a target with printed metadata:
 
@@ -88,8 +93,17 @@ PPCT/
 │   ├── __init__.py
 │   ├── cli.py
 │   └── target.py
+├── web/
+│   ├── index.html
+│   ├── app.js
+│   ├── styles.css
+│   ├── manifest.webmanifest
+│   ├── sw.js
+│   └── icons/
+│       └── icon.svg
 ├── tests/
-│   └── test_generator.py
+│   ├── test_generator.py
+│   └── test_web_app.py
 └── output/              # local generated files, ignored by git
 ```
 

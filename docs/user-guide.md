@@ -6,7 +6,14 @@ PPCT compares a complete plotting setup, not just a pen. Keep that in mind when 
 
 ## 1. Generate the SVG
 
-From the repository root:
+Use the browser generator when it is deployed:
+
+- GitHub Pages: `https://utrost.github.io/PPCT/`
+- simiono.com: `https://simiono.com/ppct/`
+
+Fill in title, operator, and date, then use **Download SVG**.
+
+Or generate from the repository root:
 
 ```bash
 python3 -m ppct.cli --output output/ppct-a4.svg

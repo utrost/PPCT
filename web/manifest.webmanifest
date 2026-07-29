@@ -1,0 +1,18 @@
+{
+  "name": "PPCT Web Generator",
+  "short_name": "PPCT",
+  "description": "Generate A4 PlotPen Characterization Target SVG files in the browser.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f1ea",
+  "theme_color": "#111111",
+  "icons": [
+    {
+      "src": "./icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
