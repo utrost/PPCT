@@ -34,6 +34,8 @@ Or use the browser generator after deployment:
 - GitHub Pages: `https://utrost.github.io/PPCT/`
 - simiono.com: `https://simiono.com/ppct/`
 
+The browser generator supports live preview, SVG download, optional pen/paper/plotter notes, and a geometry-only mode that omits plotted text labels for thicker pens.
+
 Generate a target with printed metadata:
 
 ```bash
