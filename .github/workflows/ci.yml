@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test and build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Run tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Generate smoke-test SVG
+        run: >-
+          python -m ppct.cli
+          --output /tmp/ppct-ci.svg
+          --title "CI smoke test"
+          --operator "GitHub Actions"
+          --date "2026-07-29"
+
+      - name: Validate smoke-test SVG
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from xml.etree import ElementTree as ET
+
+          path = Path('/tmp/ppct-ci.svg')
+          root = ET.parse(path).getroot()
+          assert root.attrib['width'] == '210mm'
+          assert root.attrib['height'] == '297mm'
+          assert root.attrib['viewBox'] == '0 0 210 297'
+          section_count = sum(
+              1
+              for element in root.iter()
+              if (element.attrib.get('id') or '').startswith('section-')
+          )
+          assert section_count == 9, section_count
+          print(f'Validated {path} ({path.stat().st_size} bytes, {section_count} sections)')
+          PY
+
+      - name: Build package
+        run: uv build
