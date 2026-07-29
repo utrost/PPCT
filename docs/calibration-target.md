@@ -12,7 +12,7 @@ The target is not a formal standard. It is a practical sheet for comparing pens 
 - Units: millimetres
 - Default output: `output/ppct-a4.svg`
 - Browser SVG layers: `Template / print first` and `Plot data / draw second`
-- Browser template export: A4 PDF with labels, metadata fields, guide boxes, ruler labels, and observation lines
+- Browser template export: A4 PDF with labels, metadata fields, guide boxes, ruler labels, axes, and readout fields
 
 The printed and plotted sheet should remain at 100% scale.
 
@@ -49,7 +49,7 @@ Purpose: find the spacing where separate lines merge or become visually unusable
 
 Current marks:
 
-- Groups of close parallel lines
+- Separate mini-panels of close parallel lines at 2, 1.5, 1, 0.7, 0.5, and 0.3 mm
 - A spacing axis labelled in millimetres
 
 Look for:
@@ -67,7 +67,8 @@ Purpose: test tone generation with regular hatching.
 
 Current marks:
 
-- Five rectangular hatch blocks at 3, 2, 1.5, 1, and 0.5 mm spacing
+- Two rows of hatch blocks at 3, 2, 1.5, 1, and 0.5 mm spacing
+- Linear hatching in the first row and cross-hatching in the second row
 - A spacing axis labelled in millimetres
 
 Look for:
@@ -88,7 +89,8 @@ Purpose: test dynamic behaviour during direction changes and compare curved/clos
 Current marks:
 
 - Curved path
-- Concentric circles at the same spacing family used for hatching, including 0.5 mm
+- Closed concentric circles at 2, 1.5, 1, and 0.5 mm spacing
+- Small spiral-like continuous curves at the same spacing values
 - A spacing axis labelled in millimetres
 
 Look for:
@@ -107,7 +109,8 @@ Purpose: find the smallest usable plotted SVG text size for this pen/paper/plott
 
 Current marks:
 
-- `PPCT abc 123` at 4, 3, 2, 1.5, and 1 mm text sizes
+- `PPCT abc 123` at 4, 3, 2, and 1.5 mm text sizes
+- `PPCT abc 123 Il1 O0 8B` at 1 and 0.8 mm text sizes
 - A text-height axis labelled in millimetres
 
 Look for:
@@ -140,7 +143,7 @@ Purpose: preview how stippled tonal fields look with this pen.
 
 Current marks:
 
-- Small-circle stipple boxes at 20, 40, 60, and 80 percent nominal density
+- Larger small-circle stipple boxes at 10, 25, 50, 75, and 90 percent nominal density
 - A density axis labelled in percent
 
 Look for:
@@ -150,18 +153,18 @@ Look for:
 - Ink build-up in dense samples
 - Paper damage or tearing from repeated small circles
 
-## Observation Log
+## Observation / Readout
 
-Purpose: capture quick human evaluation on the sheet.
+Purpose: turn the plotted sheet into a measurement instrument instead of a loose sample sheet.
 
 Current fields:
 
-- Line quality
-- Start/end
-- Feather/bleed
-- Suitability
+- Min line spacing: smallest readable parallel-line spacing in millimetres
+- Min hatch spacing: smallest usable hatch spacing in millimetres
+- Min text size: smallest usable plotted text size in millimetres
+- Best stipple: preferred stipple density in percent
 
-Use this for immediate notes. Put detailed notes in the archived `notes.md` file.
+Use this for immediate threshold values. Put detailed qualitative notes in the archived `notes.md` file.
 
 ## Suggested archive fields
 
@@ -171,7 +174,7 @@ A future metadata schema should cover these fields.
 test:
   date: "2026-07-29"
   operator: ""
-  ppct_version: "0.1.0"
+  ppct_version: "0.5.0"
   svg_file: "ppct-a4.svg"
 pen:
   manufacturer: ""

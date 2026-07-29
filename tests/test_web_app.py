@@ -15,8 +15,8 @@ class WebGeneratorTests(unittest.TestCase):
 
         self.assertIn("PPCT Web Generator", index)
         self.assertIn('name="viewport"', index)
-        self.assertIn('href="./styles.css?v=0.4.0"', index)
-        self.assertIn('src="./app.js?v=0.4.0"', index)
+        self.assertIn('href="./styles.css?v=0.5.0"', index)
+        self.assertIn('src="./app.js?v=0.5.0"', index)
         self.assertIn('href="./manifest.webmanifest"', index)
         self.assertIn('id="title"', index)
         self.assertIn('id="operator"', index)
@@ -33,7 +33,7 @@ class WebGeneratorTests(unittest.TestCase):
     def test_service_worker_prefers_network_and_claims_updates(self):
         service_worker = (WEB / "sw.js").read_text(encoding="utf-8")
 
-        self.assertIn("ppct-web-v0.4.0", service_worker)
+        self.assertIn("ppct-web-v0.5.0", service_worker)
         self.assertIn("self.skipWaiting()", service_worker)
         self.assertIn("self.clients.claim()", service_worker)
         self.assertLess(service_worker.index("fetch(request)"), service_worker.index("caches.match(request)"))
@@ -119,6 +119,38 @@ class WebGeneratorTests(unittest.TestCase):
         self.assertIn("0.5mm", payload["pdf"])
         self.assertIn("Minimum Text Size", payload["pdf"])
         self.assertIn("Stipple Gradient", payload["pdf"])
+
+    def test_browser_target_second_pass_measurement_ergonomics(self):
+        script = """
+        const { readFileSync } = require('fs');
+        const vm = require('vm');
+        const code = readFileSync('web/app.js', 'utf8');
+        const context = { window: {}, document: { addEventListener() {} }, URL, Blob, console };
+        vm.createContext(context);
+        vm.runInContext(code, context);
+        const svg = context.window.PPCT.generateSvg({ title: 'Measurement ergonomics' });
+        const pdf = context.window.PPCT.generateTemplatePdf({ title: 'Measurement ergonomics' });
+        console.log(JSON.stringify({ svg, pdf }));
+        """
+        result = subprocess.run(["node", "-e", script], cwd=ROOT, text=True, capture_output=True)
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        svg = payload["svg"]
+        self.assertIn('data-layout="measurement-v2"', svg)
+        self.assertIn('data-test="hatch-linear-0.5mm"', svg)
+        self.assertIn('data-test="hatch-cross-0.5mm"', svg)
+        self.assertIn('data-test="text-size-0.8mm"', svg)
+        self.assertIn("Il1 O0 8B", svg)
+        self.assertIn('data-test="concentric-closed-0.5mm"', svg)
+        self.assertIn('data-test="concentric-spiral-0.5mm"', svg)
+        self.assertIn('data-test="stipple-density-90"', svg)
+        self.assertIn('data-readout="min-line-spacing"', svg)
+        self.assertIn('data-readout="min-hatch-spacing"', svg)
+        self.assertIn('data-readout="min-text-size"', svg)
+        self.assertIn('data-readout="best-stipple-density"', svg)
+        self.assertIn("Min line spacing", payload["pdf"])
+        self.assertIn("Best stipple", payload["pdf"])
 
     def test_browser_generator_can_print_notes_and_omit_plotted_text(self):
         script = """
