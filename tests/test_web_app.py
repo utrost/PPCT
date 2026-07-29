@@ -21,6 +21,8 @@ class WebGeneratorTests(unittest.TestCase):
         self.assertIn('id="title"', index)
         self.assertIn('id="operator"', index)
         self.assertIn('id="date"', index)
+        self.assertIn('id="notes"', index)
+        self.assertIn('id="include-text"', index)
         self.assertIn('id="download-svg"', index)
         self.assertIn('id="svg-preview"', index)
 
@@ -68,6 +70,33 @@ class WebGeneratorTests(unittest.TestCase):
                 "section-observation-log",
             }.issubset(ids)
         )
+
+    def test_browser_generator_can_print_notes_and_omit_plotted_text(self):
+        script = """
+        const { readFileSync } = require('fs');
+        const vm = require('vm');
+        const code = readFileSync('web/app.js', 'utf8');
+        const context = { window: {}, document: { addEventListener() {} }, URL, Blob, console };
+        vm.createContext(context);
+        vm.runInContext(code, context);
+        const withNotes = context.window.PPCT.generateSvg({
+          title: 'Web test',
+          operator: 'Hermes',
+          date: '2026-07-29',
+          notes: 'Pilot G2 / Clairefontaine / iDraw H',
+        });
+        const geometryOnly = context.window.PPCT.generateSvg({ includeText: false });
+        console.log(JSON.stringify({ withNotes, geometryOnly }));
+        """
+        result = subprocess.run(["node", "-e", script], cwd=ROOT, text=True, capture_output=True)
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertIn("Pilot G2 / Clairefontaine / iDraw H", payload["withNotes"])
+        self.assertIn("Pen / paper / plotter notes:", payload["withNotes"])
+        self.assertIn("section-geometry-reference", payload["geometryOnly"])
+        self.assertNotIn("Curves &amp; Corners", payload["geometryOnly"])
+        self.assertNotIn("Pen / paper / plotter notes:", payload["geometryOnly"])
 
 
 if __name__ == "__main__":

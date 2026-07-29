@@ -35,6 +35,15 @@
         <label for="date">Date</label>
         <input id="date" name="date" type="date">
 
+        <label for="notes">Pen / paper / plotter notes</label>
+        <textarea id="notes" name="notes" rows="3" placeholder="Pen, paper, plotter, feed rate..." maxlength="160"></textarea>
+
+        <label class="check-row" for="include-text">
+          <input id="include-text" name="include-text" type="checkbox" checked>
+          <span>Plot labels and metadata text</span>
+        </label>
+        <p class="hint">Turn this off for thicker pens when plotting onto a preprinted reference sheet.</p>
+
         <div class="actions">
           <button type="button" id="download-svg">Download SVG</button>
           <button type="button" id="reset-form" class="secondary">Reset</button>

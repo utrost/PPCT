@@ -1,6 +1,7 @@
 (() => {
   const A4_WIDTH = 210;
   const A4_HEIGHT = 297;
+  let includeSvgText = true;
 
   function escapeXml(value) {
     return String(value ?? '')
@@ -31,6 +32,7 @@
   }
 
   function text(x, y, content, size = 3, extra = {}) {
+    if (!includeSvgText) return '';
     return `<text ${attrs({ x, y, 'font-size': size, ...extra })}>${escapeXml(content)}</text>`;
   }
 
@@ -57,6 +59,11 @@
     );
     body.push(text(x + 115, y + 9, 'Pen / paper / plotter notes:', 2.6, { 'font-family': 'monospace' }));
     body.push(rect(x + 115, y + 11, 70, 9, { fill: 'none', stroke: '#999', 'stroke-width': '0.15' }));
+    const notes = (config.notes || '').trim();
+    if (notes) {
+      const shortNotes = notes.length > 46 ? `${notes.slice(0, 43)}...` : notes;
+      body.push(text(x + 117, y + 17, shortNotes, 2.3, { 'font-family': 'monospace' }));
+    }
     return group('section-metadata', 'Metadata', x, y, w, h, body);
   }
 
@@ -175,6 +182,7 @@
   }
 
   function generateSvg(config = {}) {
+    includeSvgText = config.includeText !== false;
     const sections = [
       metadataSection(config),
       geometryReference(),
@@ -200,6 +208,8 @@
       title: document.getElementById('title')?.value || 'PPCT A4 Reference',
       operator: document.getElementById('operator')?.value || '',
       date: document.getElementById('date')?.value || new Date().toISOString().slice(0, 10),
+      notes: document.getElementById('notes')?.value || '',
+      includeText: document.getElementById('include-text')?.checked !== false,
     };
   }
 
@@ -225,6 +235,8 @@
     document.getElementById('title').value = 'PPCT A4 Reference';
     document.getElementById('operator').value = '';
     document.getElementById('date').value = date;
+    document.getElementById('notes').value = '';
+    document.getElementById('include-text').checked = true;
     render();
   }
 

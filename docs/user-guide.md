@@ -11,7 +11,9 @@ Use the browser generator when it is deployed:
 - GitHub Pages: `https://utrost.github.io/PPCT/`
 - simiono.com: `https://simiono.com/ppct/`
 
-Fill in title, operator, and date, then use **Download SVG**.
+Fill in title, operator, date, and optional pen/paper/plotter notes, then use **Download SVG**.
+
+The web generator can also omit plotted labels and metadata text. Use that mode for thicker pens or when plotting only the calibration geometry onto a preprinted reference sheet.
 
 Or generate from the repository root:
 
