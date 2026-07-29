@@ -1,7 +1,7 @@
 (() => {
   const A4_WIDTH = 210;
   const A4_HEIGHT = 297;
-  let includeSvgText = true;
+  const PT_PER_MM = 72 / 25.4;
 
   function escapeXml(value) {
     return String(value ?? '')
@@ -10,6 +10,15 @@
       .replaceAll('>', '&gt;')
       .replaceAll('"', '&quot;')
       .replaceAll("'", '&apos;');
+  }
+
+  function escapePdf(value) {
+    return String(value ?? '')
+      .replaceAll('\\', '\\\\')
+      .replaceAll('(', '\\(')
+      .replaceAll(')', '\\)')
+      .replaceAll('\r', ' ')
+      .replaceAll('\n', ' ');
   }
 
   function attrs(values) {
@@ -32,70 +41,113 @@
   }
 
   function text(x, y, content, size = 3, extra = {}) {
-    if (!includeSvgText) return '';
     return `<text ${attrs({ x, y, 'font-size': size, ...extra })}>${escapeXml(content)}</text>`;
   }
 
-  function group(id, label, x, y, width, height, body) {
-    return [
-      `<g id="${id}">`,
-      rect(x, y, width, height, { fill: 'none', stroke: '#bbb', 'stroke-width': '0.2' }),
-      text(x + 2, y + 4, label, 2.8, { fill: '#111', 'font-family': 'monospace' }),
-      ...body,
-      '</g>',
-    ].join('\n');
+  function styleFor(kind) {
+    if (kind === 'template') return { fill: 'none', stroke: '#999', 'stroke-width': '0.15' };
+    if (kind === 'guide') return { fill: 'none', stroke: '#bbb', 'stroke-width': '0.2' };
+    if (kind === 'write') return { stroke: '#777', 'stroke-width': '0.12' };
+    return { stroke: '#000', 'stroke-width': '0.2' };
   }
 
-  function metadataSection(config) {
-    const x = 10, y = 10, w = 190, h = 24;
+  const sections = [
+    { id: 'section-metadata', label: 'Metadata', x: 10, y: 10, w: 190, h: 24 },
+    { id: 'section-geometry-reference', label: 'Geometry Reference', x: 10, y: 39, w: 190, h: 28 },
+    { id: 'section-stroke-characterisation', label: 'Stroke Characterisation', x: 10, y: 72, w: 90, h: 42 },
+    { id: 'section-resolution-wedges', label: 'Resolution Wedges', x: 110, y: 72, w: 90, h: 42 },
+    { id: 'section-hatch-density', label: 'Hatch Density', x: 10, y: 119, w: 90, h: 46 },
+    { id: 'section-curves-corners', label: 'Curves & Corners', x: 110, y: 119, w: 90, h: 46 },
+    { id: 'section-continuous-flow', label: 'Continuous Flow', x: 10, y: 170, w: 190, h: 39 },
+    { id: 'section-pen-lift-reliability', label: 'Pen Lift Reliability', x: 10, y: 214, w: 90, h: 43 },
+    { id: 'section-observation-log', label: 'Observation Log', x: 110, y: 214, w: 90, h: 43 },
+  ];
+
+  function templateLayer(config) {
+    const items = [
+      text(10, 6, 'PPCT printable template. Print at 100%. Plot the data layer on top.', 2.3, { 'font-family': 'monospace', fill: '#555' }),
+    ];
+
+    sections.forEach((section) => {
+      items.push(rect(section.x, section.y, section.w, section.h, styleFor('guide')));
+      items.push(text(section.x + 2, section.y + 4, section.label, 2.8, { fill: '#111', 'font-family': 'monospace' }));
+    });
+
+    const mx = 10, my = 10;
     const rows = [
       ['Title', config.title || 'PPCT A4 Reference'],
       ['Operator', config.operator || '________________'],
       ['Date', config.date || '________________'],
-      ['Generator', 'web-0.1.0'],
+      ['Generator', 'web-0.2.0'],
     ];
-    const body = rows.map(([key, value], index) =>
-      text(x + 3, y + 9 + index * 4, `${key}: ${value}`, 2.6, { 'font-family': 'monospace' })
-    );
-    body.push(text(x + 115, y + 9, 'Pen / paper / plotter notes:', 2.6, { 'font-family': 'monospace' }));
-    body.push(rect(x + 115, y + 11, 70, 9, { fill: 'none', stroke: '#999', 'stroke-width': '0.15' }));
+    rows.forEach(([key, value], index) => {
+      items.push(text(mx + 3, my + 9 + index * 4, `${key}: ${value}`, 2.6, { 'font-family': 'monospace' }));
+    });
+    items.push(text(mx + 115, my + 9, 'Pen / paper / plotter notes:', 2.6, { 'font-family': 'monospace' }));
+    items.push(rect(mx + 115, my + 11, 70, 9, styleFor('template')));
     const notes = (config.notes || '').trim();
     if (notes) {
       const shortNotes = notes.length > 46 ? `${notes.slice(0, 43)}...` : notes;
-      body.push(text(x + 117, y + 17, shortNotes, 2.3, { 'font-family': 'monospace' }));
+      items.push(text(mx + 117, my + 17, shortNotes, 2.3, { 'font-family': 'monospace' }));
     }
-    return group('section-metadata', 'Metadata', x, y, w, h, body);
+
+    const gx = 10, gy = 39;
+    for (let tick = 0; tick <= 100; tick += 10) {
+      items.push(text(gx + 5 + tick - 1.5, gy + 23, tick, 2.2, { 'font-family': 'monospace' }));
+    }
+    items.push(text(gx + 126, gy + 23, '50 x 10 mm box', 2.2, { 'font-family': 'monospace' }));
+
+    [0.1, 0.2, 0.3, 0.5, 0.8].forEach((width, index) => {
+      items.push(text(84, 83.8 + index * 6, width.toFixed(1), 2, { 'font-family': 'monospace' }));
+    });
+    [2, 1.5, 1, 0.7, 0.5, 0.3].forEach((spacing, index) => {
+      items.push(text(118 + index * 12, 107, `${spacing}mm`, 2, { 'font-family': 'monospace' }));
+    });
+    [3, 2, 1.5, 1].forEach((spacing, index) => {
+      items.push(text(19 + index * 19, 158, `${spacing}mm`, 2, { 'font-family': 'monospace' }));
+    });
+
+    ['Line quality', 'Start/end', 'Feather/bleed', 'Suitability'].forEach((label, index) => {
+      const yy = 226 + index * 7;
+      items.push(text(114, yy, `${label}:`, 2.4, { 'font-family': 'monospace' }));
+      items.push(line(142, yy - 0.8, 194, yy - 0.8, styleFor('write')));
+    });
+
+    return `<g id="layer-template" data-layer="template" inkscape:groupmode="layer" inkscape:label="Template / print first">\n${items.join('\n')}\n</g>`;
+  }
+
+  function plotSection(sectionId, body) {
+    return `<g id="${sectionId}" data-layer="plot-data">\n${body.join('\n')}\n</g>`;
+  }
+
+  function metadataPlotData() {
+    return plotSection('section-metadata', []);
   }
 
   function geometryReference() {
-    const x = 10, y = 39, w = 190, h = 28;
+    const x = 10, y = 39;
     const body = [line(x + 5, y + 16, x + 105, y + 16, { stroke: '#000', 'stroke-width': '0.25' })];
     for (let tick = 0; tick <= 100; tick += 5) {
       const height = tick % 10 === 0 ? 5 : 3;
       const tx = x + 5 + tick;
       body.push(line(tx, y + 16, tx, y + 16 - height, { stroke: '#000', 'stroke-width': '0.18' }));
-      if (tick % 10 === 0) body.push(text(tx - 1.5, y + 23, tick, 2.2, { 'font-family': 'monospace' }));
     }
     body.push(rect(x + 125, y + 9, 50, 10, { fill: 'none', stroke: '#000', 'stroke-width': '0.25' }));
-    body.push(text(x + 126, y + 23, '50 x 10 mm box', 2.2, { 'font-family': 'monospace' }));
-    return group('section-geometry-reference', 'Geometry Reference', x, y, w, h, body);
+    return plotSection('section-geometry-reference', body);
   }
 
   function strokeCharacterisation() {
-    const x = 10, y = 72, w = 90, h = 42;
+    const x = 10, y = 72;
     const widths = [0.1, 0.2, 0.3, 0.5, 0.8];
-    const body = widths.flatMap((width, index) => {
+    const body = widths.map((width, index) => {
       const yy = y + 11 + index * 6;
-      return [
-        line(x + 8, yy, x + 72, yy, { stroke: '#000', 'stroke-width': width }),
-        text(x + 74, yy + 0.8, width.toFixed(1), 2, { 'font-family': 'monospace' }),
-      ];
+      return line(x + 8, yy, x + 72, yy, { stroke: '#000', 'stroke-width': width });
     });
-    return group('section-stroke-characterisation', 'Stroke Characterisation', x, y, w, h, body);
+    return plotSection('section-stroke-characterisation', body);
   }
 
   function resolutionWedges() {
-    const x = 110, y = 72, w = 90, h = 42;
+    const x = 110, y = 72;
     const spacings = [2, 1.5, 1, 0.7, 0.5, 0.3];
     const body = [];
     spacings.forEach((spacing, index) => {
@@ -106,13 +158,12 @@
         const xx = Math.round((startX + n * spacing) * 100) / 100;
         body.push(line(xx, yy, xx, yy + 20, { stroke: '#000', 'stroke-width': '0.15' }));
       }
-      body.push(text(startX, y + 35, `${spacing}mm`, 2, { 'font-family': 'monospace' }));
     });
-    return group('section-resolution-wedges', 'Resolution Wedges', x, y, w, h, body);
+    return plotSection('section-resolution-wedges', body);
   }
 
   function hatchDensity() {
-    const x = 10, y = 119, w = 90, h = 46;
+    const x = 10, y = 119;
     const body = [];
     [3, 2, 1.5, 1].forEach((spacing, index) => {
       const bx = x + 8 + index * 19;
@@ -122,13 +173,12 @@
         const xx = Math.round((bx + n * spacing) * 100) / 100;
         body.push(line(xx, by, xx, by + 24, { stroke: '#000', 'stroke-width': '0.12' }));
       }
-      body.push(text(bx + 1, y + 39, `${spacing}mm`, 2, { 'font-family': 'monospace' }));
     });
-    return group('section-hatch-density', 'Hatch Density', x, y, w, h, body);
+    return plotSection('section-hatch-density', body);
   }
 
   function curvesCorners() {
-    const x = 110, y = 119, w = 90, h = 46;
+    const x = 110, y = 119;
     const body = [
       path(`M ${x + 10} ${y + 34} C ${x + 22} ${y + 6}, ${x + 38} ${y + 6}, ${x + 50} ${y + 34} S ${x + 70} ${y + 62}, ${x + 80} ${y + 16}`, { fill: 'none', stroke: '#000', 'stroke-width': '0.25' }),
     ];
@@ -136,11 +186,11 @@
       const cx = x + 12 + index * 18;
       body.push(path(`M ${cx} ${y + 18} h 8 a ${radius} ${radius} 0 0 1 ${radius} ${radius} v 8`, { fill: 'none', stroke: '#000', 'stroke-width': '0.2' }));
     });
-    return group('section-curves-corners', 'Curves & Corners', x, y, w, h, body);
+    return plotSection('section-curves-corners', body);
   }
 
   function continuousFlow() {
-    const x = 10, y = 170, w = 190, h = 39;
+    const x = 10, y = 170;
     const segments = [`M ${x + 8} ${y + 22}`];
     for (let index = 0; index < 14; index += 1) {
       const cx1 = x + 16 + index * 12;
@@ -150,13 +200,13 @@
       const ex = x + 28 + index * 12;
       segments.push(`C ${cx1} ${cy1}, ${cx2} ${cy2}, ${ex} ${y + 22}`);
     }
-    return group('section-continuous-flow', 'Continuous Flow', x, y, w, h, [
+    return plotSection('section-continuous-flow', [
       path(segments.join(' '), { fill: 'none', stroke: '#000', 'stroke-width': '0.25' }),
     ]);
   }
 
   function penLiftReliability() {
-    const x = 10, y = 214, w = 90, h = 43;
+    const x = 10, y = 214;
     const body = [];
     for (let row = 0; row < 5; row += 1) {
       for (let col = 0; col < 9; col += 1) {
@@ -166,25 +216,16 @@
         body.push(line(cx, cy - 2, cx, cy + 2, { stroke: '#000', 'stroke-width': '0.18' }));
       }
     }
-    return group('section-pen-lift-reliability', 'Pen Lift Reliability', x, y, w, h, body);
+    return plotSection('section-pen-lift-reliability', body);
   }
 
-  function observationLog() {
-    const x = 110, y = 214, w = 90, h = 43;
-    const body = ['Line quality', 'Start/end', 'Feather/bleed', 'Suitability'].flatMap((label, index) => {
-      const yy = y + 12 + index * 7;
-      return [
-        text(x + 4, yy, `${label}:`, 2.4, { 'font-family': 'monospace' }),
-        line(x + 32, yy - 0.8, x + 84, yy - 0.8, { stroke: '#777', 'stroke-width': '0.12' }),
-      ];
-    });
-    return group('section-observation-log', 'Observation Log', x, y, w, h, body);
+  function observationLogPlotData() {
+    return plotSection('section-observation-log', []);
   }
 
-  function generateSvg(config = {}) {
-    includeSvgText = config.includeText !== false;
-    const sections = [
-      metadataSection(config),
+  function plotDataLayer() {
+    return `<g id="layer-plot-data" data-layer="plot-data" inkscape:groupmode="layer" inkscape:label="Plot data / draw second">\n${[
+      metadataPlotData(),
       geometryReference(),
       strokeCharacterisation(),
       resolutionWedges(),
@@ -192,15 +233,92 @@
       curvesCorners(),
       continuousFlow(),
       penLiftReliability(),
-      observationLog(),
-    ].join('\n');
-
-    return `<?xml version="1.0" encoding="UTF-8"?>\n<svg id="ppct-target" xmlns="http://www.w3.org/2000/svg" width="${A4_WIDTH}mm" height="${A4_HEIGHT}mm" viewBox="0 0 ${A4_WIDTH} ${A4_HEIGHT}">\n<title>PPCT PlotPen Characterization Target</title>\n<desc>A browser-generated A4 calibration target for pen plotter evaluation.</desc>\n<style>text{dominant-baseline:alphabetic}.cut{fill:none;stroke:#000}</style>\n${sections}\n</svg>\n`;
+      observationLogPlotData(),
+    ].join('\n')}\n</g>`;
   }
 
-  function filenameFor(config) {
+  function generateSvg(config = {}) {
+    const includeTemplate = config.includeText !== false;
+    const layers = [];
+    if (includeTemplate) layers.push(templateLayer(config));
+    layers.push(plotDataLayer());
+
+    return `<?xml version="1.0" encoding="UTF-8"?>\n<svg id="ppct-target" xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="${A4_WIDTH}mm" height="${A4_HEIGHT}mm" viewBox="0 0 ${A4_WIDTH} ${A4_HEIGHT}">\n<title>PPCT PlotPen Characterization Target</title>\n<desc>A browser-generated A4 calibration target with separate printable-template and plot-data layers.</desc>\n<style>text{dominant-baseline:alphabetic}.cut{fill:none;stroke:#000}</style>\n${layers.join('\n')}\n</svg>\n`;
+  }
+
+  function pdfLine(x1, y1, x2, y2) {
+    const px1 = x1 * PT_PER_MM;
+    const py1 = (A4_HEIGHT - y1) * PT_PER_MM;
+    const px2 = x2 * PT_PER_MM;
+    const py2 = (A4_HEIGHT - y2) * PT_PER_MM;
+    return `${px1.toFixed(2)} ${py1.toFixed(2)} m ${px2.toFixed(2)} ${py2.toFixed(2)} l S`;
+  }
+
+  function pdfRect(x, y, w, h) {
+    const px = x * PT_PER_MM;
+    const py = (A4_HEIGHT - y - h) * PT_PER_MM;
+    return `${px.toFixed(2)} ${py.toFixed(2)} ${(w * PT_PER_MM).toFixed(2)} ${(h * PT_PER_MM).toFixed(2)} re S`;
+  }
+
+  function pdfText(x, y, content, size = 8) {
+    const px = x * PT_PER_MM;
+    const py = (A4_HEIGHT - y) * PT_PER_MM;
+    return `BT /F1 ${size.toFixed(1)} Tf ${px.toFixed(2)} ${py.toFixed(2)} Td (${escapePdf(content)}) Tj ET`;
+  }
+
+  function generateTemplatePdf(config = {}) {
+    const commands = ['0.6 w', '0.45 0.45 0.45 RG'];
+    commands.push(pdfText(10, 6, 'PPCT printable template. Print at 100%. Plot the SVG data layer on top.', 6.5));
+    sections.forEach((section) => {
+      commands.push(pdfRect(section.x, section.y, section.w, section.h));
+      commands.push(pdfText(section.x + 2, section.y + 4, section.label, 8));
+    });
+    const rows = [
+      ['Title', config.title || 'PPCT A4 Reference'],
+      ['Operator', config.operator || '________________'],
+      ['Date', config.date || '________________'],
+      ['Generator', 'web-0.2.0'],
+    ];
+    rows.forEach(([key, value], index) => commands.push(pdfText(13, 19 + index * 4, `${key}: ${value}`, 7)));
+    commands.push(pdfText(125, 19, 'Pen / paper / plotter notes:', 7));
+    commands.push(pdfRect(125, 21, 70, 9));
+    const notes = (config.notes || '').trim();
+    if (notes) commands.push(pdfText(127, 27, notes.length > 46 ? `${notes.slice(0, 43)}...` : notes, 6.5));
+    for (let tick = 0; tick <= 100; tick += 10) commands.push(pdfText(13.5 + tick, 62, tick, 6));
+    commands.push(pdfText(136, 62, '50 x 10 mm box', 6));
+    [0.1, 0.2, 0.3, 0.5, 0.8].forEach((width, index) => commands.push(pdfText(84, 83.8 + index * 6, width.toFixed(1), 6)));
+    [2, 1.5, 1, 0.7, 0.5, 0.3].forEach((spacing, index) => commands.push(pdfText(118 + index * 12, 107, `${spacing}mm`, 6)));
+    [3, 2, 1.5, 1].forEach((spacing, index) => commands.push(pdfText(19 + index * 19, 158, `${spacing}mm`, 6)));
+    ['Line quality', 'Start/end', 'Feather/bleed', 'Suitability'].forEach((label, index) => {
+      const yy = 226 + index * 7;
+      commands.push(pdfText(114, yy, `${label}:`, 7));
+      commands.push(pdfLine(142, yy - 0.8, 194, yy - 0.8));
+    });
+
+    const stream = commands.join('\n');
+    const objects = [
+      '<< /Type /Catalog /Pages 2 0 R >>',
+      '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${(A4_WIDTH * PT_PER_MM).toFixed(2)} ${(A4_HEIGHT * PT_PER_MM).toFixed(2)}] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>`,
+      '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+      `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`,
+    ];
+    const chunks = ['%PDF-1.4\n'];
+    const offsets = [0];
+    objects.forEach((object, index) => {
+      offsets.push(chunks.join('').length);
+      chunks.push(`${index + 1} 0 obj\n${object}\nendobj\n`);
+    });
+    const xrefOffset = chunks.join('').length;
+    chunks.push(`xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`);
+    offsets.slice(1).forEach((offset) => chunks.push(`${String(offset).padStart(10, '0')} 00000 n \n`));
+    chunks.push(`trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF\n`);
+    return chunks.join('');
+  }
+
+  function filenameFor(config, extension = 'svg') {
     const date = (config.date || new Date().toISOString().slice(0, 10)).replace(/[^0-9-]/g, '');
-    return `ppct-a4-${date}.svg`;
+    return `ppct-a4-${date}.${extension}`;
   }
 
   function currentConfig() {
@@ -219,15 +337,24 @@
     preview.innerHTML = generateSvg(currentConfig());
   }
 
-  function download() {
-    const config = currentConfig();
-    const blob = new Blob([generateSvg(config)], { type: 'image/svg+xml' });
+  function downloadBlob(content, type, filename) {
+    const blob = new Blob([content], { type });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = url;
-    anchor.download = filenameFor(config);
+    anchor.download = filename;
     anchor.click();
     URL.revokeObjectURL(url);
+  }
+
+  function downloadSvg() {
+    const config = currentConfig();
+    downloadBlob(generateSvg(config), 'image/svg+xml', filenameFor(config, 'svg'));
+  }
+
+  function downloadTemplatePdf() {
+    const config = currentConfig();
+    downloadBlob(generateTemplatePdf(config), 'application/pdf', filenameFor(config, 'template.pdf'));
   }
 
   function resetForm() {
@@ -240,12 +367,13 @@
     render();
   }
 
-  window.PPCT = { generateSvg, filenameFor };
+  window.PPCT = { generateSvg, generateTemplatePdf, filenameFor };
 
   document.addEventListener('DOMContentLoaded', () => {
     resetForm();
     document.getElementById('generator-form').addEventListener('input', render);
-    document.getElementById('download-svg').addEventListener('click', download);
+    document.getElementById('download-svg').addEventListener('click', downloadSvg);
+    document.getElementById('download-template-pdf').addEventListener('click', downloadTemplatePdf);
     document.getElementById('reset-form').addEventListener('click', resetForm);
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw.js').catch(() => {});

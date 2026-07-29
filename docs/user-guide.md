@@ -11,9 +11,15 @@ Use the browser generator when it is deployed:
 - GitHub Pages: `https://utrost.github.io/PPCT/`
 - simiono.com: `https://simiono.com/ppct/`
 
-Fill in title, operator, date, and optional pen/paper/plotter notes, then use **Download SVG**.
+Fill in title, operator, date, and optional pen/paper/plotter notes.
 
-The web generator can also omit plotted labels and metadata text. Use that mode for thicker pens or when plotting only the calibration geometry onto a preprinted reference sheet.
+For the common print-then-plot workflow:
+
+1. Use **Download template PDF** and print it at 100% scale.
+2. Use **Download SVG** for the plotted marks.
+3. In plotting software, hide the `Template / print first` layer and plot only `Plot data / draw second`.
+
+The SVG keeps those as two separate layers. If your plotting software cannot hide layers, turn off **Include printable template layer in SVG** before downloading. That produces a plot-data-only SVG with no labels or metadata text.
 
 Or generate from the repository root:
 
@@ -35,7 +41,7 @@ The command creates parent directories if needed.
 
 ## 2. Print the reference sheet
 
-Print the SVG on A4 paper at 100% scale.
+Print the template PDF on A4 paper at 100% scale. You can also print the SVG template layer directly if your editor handles SVG layers and page size correctly.
 
 Check the print dialog before committing paper:
 
