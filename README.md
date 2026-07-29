@@ -1,423 +1,133 @@
-# PPCT -- PlotPen Characterization Target
+# PPCT - PlotPen Characterization Target
 
-> **Status:** Draft v0.4\
-> **Repository:** `ppct`\
-> **License:** MIT (software), documentation/license to be finalized
+PPCT generates SVG calibration targets for pen plotters.
 
-------------------------------------------------------------------------
+The first target is A4 portrait. It is meant to answer a practical question: is this pen, ink, paper, plotter, and motion setup usable, and how does it compare to the last one?
 
-# Overview
+The project is early. The generator exists, the first target layout exists, and the documentation now describes the workflow well enough to run a repeatable test.
 
-PPCT (PlotPen Characterization Target) is an open-source toolkit for
-generating standardized calibration targets for pen plotters.
+## Status
 
-The project focuses on **practical, repeatable evaluation** of the
-complete plotting system:
+- Project stage: draft v0.5
+- Current milestone: generator foundation and first practical A4 target
+- License: MIT
+- Default target: A4 portrait SVG
+- Python: 3.11+
 
--   Pen
--   Ink
--   Paper
--   Plotter
--   Plotting parameters
+## Install or run from the repository
 
-The goal is not to create a formal standard from the outset.
+Clone the repository:
 
-Instead, PPCT follows a simple engineering philosophy:
+```bash
+git clone https://github.com/utrost/PPCT.git
+cd PPCT
+```
 
-> **Keep it small. Make it work. Then improve it.**
-
-The first milestone is a useful tool that can answer a practical
-question:
-
-> *"I have a new pen. Is it suitable for plotting, and how does it
-> compare to the others I own?"*
-
-------------------------------------------------------------------------
-
-# Quick Start
-
-Generate the default A4 SVG target:
+Generate the default target:
 
 ```bash
 python3 -m ppct.cli --output output/ppct-a4.svg
 ```
 
-Add metadata that will be printed onto the target:
+Generate a target with printed metadata:
 
 ```bash
 python3 -m ppct.cli \
   --output output/ppct-a4.svg \
   --title "PPCT A4 Reference" \
-  --operator "Uwe" \
+  --operator "Operator" \
   --date "2026-07-29"
 ```
 
-Run the test suite:
+Open or print the SVG at 100% scale. Do not fit to page. Scaling defeats the geometry reference.
 
-```bash
-python3 -m unittest discover -s tests -v
-```
+A generated example is included at [`examples/ppct-a4.svg`](examples/ppct-a4.svg).
 
-A generated reference SVG is included at `examples/ppct-a4.svg`.
+## What the target contains
 
-------------------------------------------------------------------------
+The current A4 sheet contains these sections:
 
-# Project Goals
+- Metadata: test identification and notes
+- Geometry Reference: ruler ticks and a known-size rectangle
+- Stroke Characterisation: line quality at several stroke widths
+- Resolution Wedges: close parallel lines at decreasing spacing
+- Hatch Density: tone blocks using regular hatching
+- Curves & Corners: curves, turns, and radius changes
+- Continuous Flow: long-path ink consistency
+- Pen Lift Reliability: repeated starts and stops
+- Observation Log: hand-written evaluation fields
 
-Version 0.x aims to:
+The SVG is generated from Python. Do not edit generated SVG files by hand; change the generator and regenerate.
 
--   Generate an A4 calibration target as SVG
--   Generate SVGs entirely from Python
--   Eliminate manual SVG editing
--   Provide a repeatable workflow
--   Document all relevant plotting parameters
--   Produce comparable results between tests
+## Documentation
 
-------------------------------------------------------------------------
+- [`docs/user-guide.md`](docs/user-guide.md): how to generate, print, plot, inspect, and archive a test
+- [`docs/sop.md`](docs/sop.md): short operating procedure for running one PPCT sheet
+- [`docs/calibration-target.md`](docs/calibration-target.md): what each section measures
+- [`docs/developer-guide.md`](docs/developer-guide.md): project structure and development workflow
+- [`docs/roadmap.md`](docs/roadmap.md): current phases and next work
+- [`CONTRIBUTING.md`](CONTRIBUTING.md): contribution rules and pull request checklist
 
-# Guiding Principles
+## Repository structure
 
--   Python is the single source of truth.
--   SVG files are generated---not edited.
--   Every calibration element measures a specific property.
--   Every generated target shall be reproducible.
--   Practical usefulness takes priority over completeness.
-
-------------------------------------------------------------------------
-
-# Repository Structure
-
-``` text
-ppct/
+```text
+PPCT/
 ├── README.md
+├── CONTRIBUTING.md
 ├── LICENSE
 ├── pyproject.toml
+├── docs/
+│   ├── calibration-target.md
+│   ├── developer-guide.md
+│   ├── roadmap.md
+│   ├── sop.md
+│   └── user-guide.md
+├── examples/
+│   └── ppct-a4.svg
 ├── ppct/
 │   ├── __init__.py
 │   ├── cli.py
 │   └── target.py
-├── examples/
-│   └── ppct-a4.svg
 ├── tests/
 │   └── test_generator.py
 └── output/              # local generated files, ignored by git
 ```
 
-------------------------------------------------------------------------
+## Development
 
-# System Architecture
+Run tests:
 
-    Python Generator
-            │
-            ▼
-    Generated SVG
-            │
-            ▼
-    Print Reference Sheet
-            │
-            ▼
-    Plot Calibration Geometry
-            │
-            ▼
-    Inspect & Measure
-            │
-            ▼
-    Scan
-            │
-            ▼
-    Archive
+```bash
+python3 -m unittest discover -s tests -v
+```
 
-The workflow should remain deterministic. Given identical inputs, the
-generator should always produce identical output.
+Build package artifacts:
 
-------------------------------------------------------------------------
+```bash
+uv build
+```
 
-# Why A4?
+The generator should remain deterministic. Given the same inputs, it should produce the same SVG bytes.
 
-PPCT v0.x standardizes on **A4 portrait**.
+## Roadmap snapshot
 
-Reasons:
+- Phase 0: foundation, generator, docs, tests
+- Phase 1: improve the practical A4 target through real pen tests
+- Phase 2: configuration files, layout profiles, A5 support
+- Phase 3: scan and measurement workflow
 
--   Universally printable
--   Large enough for meaningful calibration
--   Suitable for binders and archives
--   Can later be reduced to A5
--   Plenty of room for annotations
+See [`docs/roadmap.md`](docs/roadmap.md) for the current plan.
 
-------------------------------------------------------------------------
+## Non-goals for v0.x
 
-# Generator Philosophy
+- Formal standardization
+- Cloud services
+- Online database
+- Community portal
+- QR-based infrastructure
 
-The generator is the project.
+Those can wait. First the sheet has to be useful.
 
-The SVG is merely an output artifact.
+## License
 
-Each calibration section is implemented as an independent module
-exposing:
-
--   dimensions
--   preferred placement
--   drawing routine
--   metadata
--   unique identifier
-
-Future targets are created by composing these reusable modules.
-
-------------------------------------------------------------------------
-
-# Initial Calibration Target
-
-Version 0.x consists of the following sections:
-
-  Section                   Purpose
-  ------------------------- --------------------------
-  Metadata                  Test identification
-  Geometry Reference        Dimensional verification
-  Stroke Characterisation   Line quality
-  Resolution Wedges         Minimum spacing
-  Hatch Density             Tone generation
-  Curves & Corners          Dynamic behaviour
-  Continuous Flow           Long-path reliability
-  Pen Lift Reliability      Start/stop consistency
-  Observation Log           Manual evaluation
-
-------------------------------------------------------------------------
-
-# Plotter Metadata
-
-Every completed sheet should capture enough information to reproduce the
-test.
-
-## Pen
-
--   Manufacturer
--   Model
--   Nominal width
--   Ink
--   Colour
-
-## Paper
-
--   Manufacturer
--   Product
--   Weight (gsm)
--   Surface finish
--   Colour
-
-## Plotter
-
--   Manufacturer
--   Model
--   Firmware
--   Controller
--   Pen holder
-
-## Motion
-
--   Feed rate
--   Acceleration
--   Jerk (if supported)
-
-## Pen Motion
-
--   Pen-up height
--   Pen-down height
--   Lift speed
--   Lower speed
--   Lift delay
--   Lower delay
-
-## Job Statistics
-
--   Estimated plotting time
--   Actual plotting time
--   Total path length
--   Pen-down distance
--   Pen-up travel distance
--   Number of paths
--   Number of pen lifts
--   Number of layers
-
-## Software
-
--   Generator version
--   Plot sender
--   SVG revision
--   Date
--   Operator
-
-Future versions should automatically generate as much of this metadata
-as possible.
-
-------------------------------------------------------------------------
-
-# Standard Operating Procedure (SOP)
-
-## Preparation
-
-1.  Print the PPCT reference page on A4 at **100% scale**.
-2.  Verify the printed ruler dimensions.
-3.  Record paper metadata.
-4.  Install and align the pen.
-5.  Record plotter settings.
-6.  Home the plotter.
-
-## Plotting
-
-1.  Load the printed sheet.
-2.  Verify orientation.
-3.  Plot the calibration geometry.
-4.  Do not change settings during the job.
-5.  Record the actual plotting time.
-
-## Inspection
-
-Inspect under good lighting.
-
-Recommended:
-
--   10× loupe
--   600 dpi flatbed scan
-
-Evaluate:
-
--   Line quality
--   Start quality
--   End quality
--   Hatch quality
--   Corner behaviour
--   Ink consistency
--   Feathering
--   Bleeding
--   Drying behaviour
--   Overall suitability
-
-## Archiving
-
-Archive together:
-
--   Generated SVG
--   Completed calibration sheet
--   600 dpi scan
--   Plotter configuration
--   Notes
-
-Each archived sheet represents exactly one:
-
-**Pen × Paper × Plotter × Configuration**
-
-------------------------------------------------------------------------
-
-# Development Roadmap
-
-## Phase 0 -- Foundation
-
--   Repository
--   Documentation
--   Generator skeleton
-
-**Exit criterion**
-
--   SVG generation works.
-
-------------------------------------------------------------------------
-
-## Phase 1 -- Practical Calibration
-
-Implement:
-
--   Metadata
--   Geometry
--   Stroke tests
--   Resolution wedges
--   Hatch density
--   Curves
--   Continuous flow
--   Pen lift tests
-
-**Exit criterion**
-
-Successfully evaluate at least five different pens.
-
-------------------------------------------------------------------------
-
-## Phase 2 -- Generator Improvements
-
--   Configurable layouts
--   Optional A5 generation
--   Configuration file
--   Paper profiles
-
-**Exit criterion**
-
-No code changes required for normal customization.
-
-------------------------------------------------------------------------
-
-## Phase 3 -- Automated Analysis
-
--   Scan workflow
--   OpenCV analysis
--   Automatic measurements
--   Report generation
-
-**Exit criterion**
-
-Selected measurements are extracted automatically.
-
-------------------------------------------------------------------------
-
-# Acceptance Criteria
-
-A new user should be able to:
-
--   Install the generator
--   Generate an SVG
--   Print the calibration sheet
--   Plot the target
--   Follow the SOP
--   Compare two pens objectively
-
-without additional documentation.
-
-------------------------------------------------------------------------
-
-# Non-Goals (v0.x)
-
-The following are intentionally postponed:
-
--   Formal standardization
--   Cloud services
--   Online database
--   Community portal
--   QR-based infrastructure
-
-These features may be revisited after the workflow has been validated
-through real-world use.
-
-------------------------------------------------------------------------
-
-# Contributing
-
-The project values:
-
--   Simple solutions
--   Reproducibility
--   Practical testing
--   Clear documentation
--   Incremental improvement
-
-If a proposed feature does not improve the practical usefulness of the
-calibration target, it probably belongs in a future release rather than
-the current milestone.
-
-------------------------------------------------------------------------
-
-# License
-
-To be finalized.
-
-Suggested:
-
--   MIT License for software
--   CC BY-SA 4.0 for documentation
+MIT. See [`LICENSE`](LICENSE).
