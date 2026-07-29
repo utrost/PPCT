@@ -15,8 +15,8 @@ class WebGeneratorTests(unittest.TestCase):
 
         self.assertIn("PPCT Web Generator", index)
         self.assertIn('name="viewport"', index)
-        self.assertIn('href="./styles.css?v=0.3.1"', index)
-        self.assertIn('src="./app.js?v=0.3.1"', index)
+        self.assertIn('href="./styles.css?v=0.4.0"', index)
+        self.assertIn('src="./app.js?v=0.4.0"', index)
         self.assertIn('href="./manifest.webmanifest"', index)
         self.assertIn('id="title"', index)
         self.assertIn('id="operator"', index)
@@ -33,7 +33,7 @@ class WebGeneratorTests(unittest.TestCase):
     def test_service_worker_prefers_network_and_claims_updates(self):
         service_worker = (WEB / "sw.js").read_text(encoding="utf-8")
 
-        self.assertIn("ppct-web-v0.3.1", service_worker)
+        self.assertIn("ppct-web-v0.4.0", service_worker)
         self.assertIn("self.skipWaiting()", service_worker)
         self.assertIn("self.clients.claim()", service_worker)
         self.assertLess(service_worker.index("fetch(request)"), service_worker.index("caches.match(request)"))
@@ -73,15 +73,52 @@ class WebGeneratorTests(unittest.TestCase):
                 "ppct-target",
                 "section-metadata",
                 "section-geometry-reference",
-                "section-stroke-characterisation",
                 "section-resolution-wedges",
                 "section-hatch-density",
-                "section-curves-corners",
+                "section-curves-concentric",
+                "section-text-sizes",
                 "section-continuous-flow",
-                "section-pen-lift-reliability",
+                "section-stipple-gradient",
                 "section-observation-log",
             }.issubset(ids)
         )
+        self.assertNotIn("section-stroke-characterisation", ids)
+        self.assertNotIn("section-pen-lift-reliability", ids)
+
+    def test_browser_target_contains_new_pen_readability_diagnostics(self):
+        script = """
+        const { readFileSync } = require('fs');
+        const vm = require('vm');
+        const code = readFileSync('web/app.js', 'utf8');
+        const context = { window: {}, document: { addEventListener() {} }, URL, Blob, console };
+        vm.createContext(context);
+        vm.runInContext(code, context);
+        const svg = context.window.PPCT.generateSvg({ title: 'Diagnostics' });
+        const pdf = context.window.PPCT.generateTemplatePdf({ title: 'Diagnostics' });
+        console.log(JSON.stringify({ svg, pdf }));
+        """
+        result = subprocess.run(["node", "-e", script], cwd=ROOT, text=True, capture_output=True)
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        svg = payload["svg"]
+        self.assertIn("0.5mm", svg)
+        self.assertIn("section-curves-concentric", svg)
+        self.assertIn("section-text-sizes", svg)
+        self.assertIn("section-stipple-gradient", svg)
+        self.assertIn("data-test=\"hatch-density-0.5mm\"", svg)
+        self.assertIn("data-test=\"concentric-spacing-0.5mm\"", svg)
+        self.assertIn("data-test=\"text-size-1.0mm\"", svg)
+        self.assertIn("data-test=\"stipple-density-80\"", svg)
+        self.assertIn("data-axis=\"spacing-mm\"", svg)
+        self.assertIn("data-axis=\"text-height-mm\"", svg)
+        self.assertIn("data-axis=\"stipple-density-percent\"", svg)
+        self.assertNotIn("Stroke Characterisation", svg)
+        self.assertNotIn("Pen Lift Reliability", svg)
+        self.assertIn("Hatch Density", payload["pdf"])
+        self.assertIn("0.5mm", payload["pdf"])
+        self.assertIn("Minimum Text Size", payload["pdf"])
+        self.assertIn("Stipple Gradient", payload["pdf"])
 
     def test_browser_generator_can_print_notes_and_omit_plotted_text(self):
         script = """
@@ -109,7 +146,8 @@ class WebGeneratorTests(unittest.TestCase):
         self.assertIn("id=\"layer-template\"", payload["withNotes"])
         self.assertIn("id=\"layer-plot-data\"", payload["withNotes"])
         self.assertIn("section-geometry-reference", payload["geometryOnly"])
-        self.assertNotIn("Curves &amp; Corners", payload["geometryOnly"])
+        self.assertIn("section-curves-concentric", payload["geometryOnly"])
+        self.assertIn("data-test=\"text-size-1.0mm\"", payload["geometryOnly"])
         self.assertNotIn("Pen / paper / plotter notes:", payload["geometryOnly"])
 
     def test_svg_has_template_and_plot_data_layers(self):
@@ -139,7 +177,7 @@ class WebGeneratorTests(unittest.TestCase):
                 if child.tag.endswith("text"):
                     text_parent_ids.append(parent.attrib.get("id"))
         self.assertTrue(text_parent_ids)
-        self.assertTrue(all(parent_id == "layer-template" for parent_id in text_parent_ids))
+        self.assertTrue(all(parent_id in {"layer-template", "section-text-sizes"} for parent_id in text_parent_ids))
         self.assertNotIn('id="layer-template"', payload["plotOnly"])
         self.assertIn('id="layer-plot-data"', payload["plotOnly"])
         self.assertEqual(payload["pdfPrefix"], "%PDF-1.4")

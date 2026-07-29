@@ -44,6 +44,10 @@ def _rect(x: float, y: float, width: float, height: float, **attrs: object) -> s
     return f"<rect {_attrs(x=x, y=y, width=width, height=height, **attrs)} />"
 
 
+def _circle(cx: float, cy: float, r: float, **attrs: object) -> str:
+    return f"<circle {_attrs(cx=cx, cy=cy, r=r, **attrs)} />"
+
+
 def _path(d: str, **attrs: object) -> str:
     return f"<path {_attrs(d=d, **attrs)} />"
 
@@ -88,20 +92,9 @@ def _geometry_reference() -> str:
     return _group("section-geometry-reference", "Geometry Reference", x, y, w, h, body)
 
 
-def _stroke_characterisation() -> str:
-    x, y, w, h = 10, 72, 90, 42
-    body = []
-    widths = [0.1, 0.2, 0.3, 0.5, 0.8]
-    for idx, width in enumerate(widths):
-        yy = y + 11 + idx * 6
-        body.append(_line(x + 8, yy, x + 72, yy, stroke="#000", stroke_width=width))
-        body.append(_text(x + 74, yy + 0.8, f"{width:.1f}", 2.0, font_family="monospace"))
-    return _group("section-stroke-characterisation", "Stroke Characterisation", x, y, w, h, body)
-
-
 def _resolution_wedges() -> str:
-    x, y, w, h = 110, 72, 90, 42
-    body = []
+    x, y, w, h = 10, 72, 90, 42
+    body = [_line(x + 8, y + 34, x + 82, y + 34, stroke="#777", stroke_width="0.12", data_axis="spacing-mm")]
     spacings = [2.0, 1.5, 1.0, 0.7, 0.5, 0.3]
     for idx, spacing in enumerate(spacings):
         start_x = x + 8 + idx * 12
@@ -110,34 +103,51 @@ def _resolution_wedges() -> str:
         for n in range(count):
             xx = start_x + n * spacing
             body.append(_line(round(xx, 2), yy, round(xx, 2), yy + 20, stroke="#000", stroke_width="0.15"))
-        body.append(_text(start_x, y + 35, f"{spacing:g}", 2.0, font_family="monospace"))
+        body.append(_text(start_x, y + 37, f"{spacing:g}mm", 2.0, font_family="monospace"))
     return _group("section-resolution-wedges", "Resolution Wedges", x, y, w, h, body)
 
 
 def _hatch_density() -> str:
-    x, y, w, h = 10, 119, 90, 46
-    body = []
-    spacings = [3.0, 2.0, 1.5, 1.0]
+    x, y, w, h = 110, 72, 90, 42
+    body = [_line(x + 8, y + 34, x + 84, y + 34, stroke="#777", stroke_width="0.12", data_axis="spacing-mm")]
+    spacings = [3.0, 2.0, 1.5, 1.0, 0.5]
     for idx, spacing in enumerate(spacings):
-        bx = x + 8 + idx * 19
+        bx = x + 8 + idx * 15
         by = y + 10
-        body.append(_rect(bx, by, 15, 24, fill="none", stroke="#000", stroke_width="0.15"))
+        body.append(_rect(bx, by, 12, 20, fill="none", stroke="#000", stroke_width="0.15", data_test=f"hatch-density-{spacing:g}mm"))
         n = 1
-        while n * spacing < 15:
-            body.append(_line(round(bx + n * spacing, 2), by, round(bx + n * spacing, 2), by + 24, stroke="#000", stroke_width="0.12"))
+        while n * spacing < 12:
+            body.append(_line(round(bx + n * spacing, 2), by, round(bx + n * spacing, 2), by + 20, stroke="#000", stroke_width="0.12"))
             n += 1
-        body.append(_text(bx + 1, y + 39, f"{spacing:g}mm", 2.0, font_family="monospace"))
+        body.append(_text(bx, y + 37, f"{spacing:g}mm", 2.0, font_family="monospace"))
     return _group("section-hatch-density", "Hatch Density", x, y, w, h, body)
 
 
-def _curves_corners() -> str:
+def _curves_concentric() -> str:
+    x, y, w, h = 10, 119, 90, 46
+    body = [_line(x + 8, y + 39, x + 82, y + 39, stroke="#777", stroke_width="0.12", data_axis="spacing-mm")]
+    body.append(_path(f"M {x+8} {y+18} C {x+19} {y+6}, {x+33} {y+6}, {x+44} {y+18} S {x+66} {y+30}, {x+80} {y+13}", fill="none", stroke="#000", stroke_width="0.22"))
+    for idx, spacing in enumerate([3.0, 2.0, 1.5, 1.0, 0.5]):
+        cx = x + 14 + idx * 15
+        cy = y + 30
+        radius = 1.5
+        first = True
+        while radius <= 6.0:
+            body.append(_circle(cx, cy, round(radius, 2), fill="none", stroke="#000", stroke_width="0.12", data_test=f"concentric-spacing-{spacing:g}mm" if first else None))
+            first = False
+            radius += spacing
+        body.append(_text(cx - 3, y + 43, f"{spacing:g}mm", 2.0, font_family="monospace"))
+    return _group("section-curves-concentric", "Curves / Concentric", x, y, w, h, body)
+
+
+def _text_sizes() -> str:
     x, y, w, h = 110, 119, 90, 46
-    body = []
-    body.append(_path(f"M {x+10} {y+34} C {x+22} {y+6}, {x+38} {y+6}, {x+50} {y+34} S {x+70} {y+62}, {x+80} {y+16}", fill="none", stroke="#000", stroke_width="0.25"))
-    for idx, radius in enumerate([2, 4, 8, 12]):
-        cx = x + 12 + idx * 18
-        body.append(_path(f"M {cx} {y+18} h 8 a {radius} {radius} 0 0 1 {radius} {radius} v 8", fill="none", stroke="#000", stroke_width="0.2"))
-    return _group("section-curves-corners", "Curves & Corners", x, y, w, h, body)
+    body = [_line(x + 8, y + 39, x + 82, y + 39, stroke="#777", stroke_width="0.12", data_axis="text-height-mm")]
+    for idx, size in enumerate([4.0, 3.0, 2.0, 1.5, 1.0]):
+        yy = y + 13 + idx * 6
+        body.append(_text(x + 8, yy, "PPCT abc 123", size, font_family="monospace", data_test=f"text-size-{size:.1f}mm"))
+        body.append(_text(x + 65, yy, f"{size:g}mm", 2.0, font_family="monospace"))
+    return _group("section-text-sizes", "Minimum Text Size", x, y, w, h, body)
 
 
 def _continuous_flow() -> str:
@@ -156,16 +166,19 @@ def _continuous_flow() -> str:
     return _group("section-continuous-flow", "Continuous Flow", x, y, w, h, body)
 
 
-def _pen_lift_reliability() -> str:
+def _stipple_gradient() -> str:
     x, y, w, h = 10, 214, 90, 43
-    body = []
-    for row in range(5):
-        for col in range(9):
-            cx = x + 9 + col * 8
-            cy = y + 11 + row * 6
-            body.append(_line(cx - 2, cy, cx + 2, cy, stroke="#000", stroke_width="0.18"))
-            body.append(_line(cx, cy - 2, cx, cy + 2, stroke="#000", stroke_width="0.18"))
-    return _group("section-pen-lift-reliability", "Pen Lift Reliability", x, y, w, h, body)
+    body = [_line(x + 8, y + 36, x + 82, y + 36, stroke="#777", stroke_width="0.12", data_axis="stipple-density-percent")]
+    for idx, density in enumerate([20, 40, 60, 80]):
+        bx = x + 8 + idx * 19
+        by = y + 10
+        body.append(_rect(bx, by, 15, 20, fill="none", stroke="#000", stroke_width="0.12"))
+        for n in range(density // 4):
+            cx = bx + 1.5 + ((n * 5) % 12)
+            cy = by + 1.5 + ((n * 7) % 17)
+            body.append(_circle(round(cx, 2), round(cy, 2), 0.28, fill="none", stroke="#000", stroke_width="0.1", data_test=f"stipple-density-{density}" if n == 0 else None))
+        body.append(_text(bx + 2, y + 35, f"{density}%", 2.0, font_family="monospace"))
+    return _group("section-stipple-gradient", "Stipple Gradient", x, y, w, h, body)
 
 
 def _observation_log() -> str:
@@ -186,12 +199,12 @@ def generate_svg(config: TargetConfig | None = None) -> str:
     sections = [
         _metadata_section(config),
         _geometry_reference(),
-        _stroke_characterisation(),
         _resolution_wedges(),
         _hatch_density(),
-        _curves_corners(),
+        _curves_concentric(),
+        _text_sizes(),
         _continuous_flow(),
-        _pen_lift_reliability(),
+        _stipple_gradient(),
         _observation_log(),
     ]
     body = "\n".join(sections)

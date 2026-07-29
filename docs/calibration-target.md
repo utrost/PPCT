@@ -43,25 +43,6 @@ Current marks:
 
 Use this section first. If geometry is wrong, later measurements are suspect.
 
-## Stroke Characterisation
-
-Purpose: compare basic line behaviour.
-
-Current marks:
-
-- Horizontal strokes at several SVG stroke widths
-
-Look for:
-
-- Consistent width
-- Feathering
-- Railroading
-- Scratchy ink flow
-- Pooling
-- Visible difference between requested stroke widths
-
-A plotter pen does not always follow SVG stroke width physically. This section still helps reveal how the sender and plotter interpret the file.
-
 ## Resolution Wedges
 
 Purpose: find the spacing where separate lines merge or become visually unusable.
@@ -69,7 +50,7 @@ Purpose: find the spacing where separate lines merge or become visually unusable
 Current marks:
 
 - Groups of close parallel lines
-- Spacing labels in millimetres
+- A spacing axis labelled in millimetres
 
 Look for:
 
@@ -86,7 +67,8 @@ Purpose: test tone generation with regular hatching.
 
 Current marks:
 
-- Rectangular hatch blocks at different spacing values
+- Five rectangular hatch blocks at 3, 2, 1.5, 1, and 0.5 mm spacing
+- A spacing axis labelled in millimetres
 
 Look for:
 
@@ -99,14 +81,15 @@ Look for:
 
 This section matters for plotter art. Some pen/paper combinations look good as outlines and ugly as hatches.
 
-## Curves & Corners
+## Curves / Concentric
 
-Purpose: test dynamic behaviour during direction changes.
+Purpose: test dynamic behaviour during direction changes and compare curved/closed-line spacing.
 
 Current marks:
 
 - Curved path
-- Corner/radius marks
+- Concentric circles at the same spacing family used for hatching, including 0.5 mm
+- A spacing axis labelled in millimetres
 
 Look for:
 
@@ -116,7 +99,22 @@ Look for:
 - Dry turns
 - Flat spots in curves
 
-Curves often reveal speed and acceleration issues faster than straight lines.
+Curves often reveal speed and acceleration issues faster than straight lines. Concentric circles also show when closely spaced closed curves visually fill in.
+
+## Minimum Text Size
+
+Purpose: find the smallest usable plotted SVG text size for this pen/paper/plotter setup.
+
+Current marks:
+
+- `PPCT abc 123` at 4, 3, 2, 1.5, and 1 mm text sizes
+- A text-height axis labelled in millimetres
+
+Look for:
+
+- First size where counters close up
+- First size where digits become ambiguous
+- Whether small text becomes fuzzy, scratchy, or over-inked
 
 ## Continuous Flow
 
@@ -136,23 +134,21 @@ Look for:
 
 This is the section that catches pens that seem fine in short samples but fail during a real plot.
 
-## Pen Lift Reliability
+## Stipple Gradient
 
-Purpose: test repeated starts and stops.
+Purpose: preview how stippled tonal fields look with this pen.
 
 Current marks:
 
-- Grid of small cross marks
+- Small-circle stipple boxes at 20, 40, 60, and 80 percent nominal density
+- A density axis labelled in percent
 
 Look for:
 
-- Dry starts
-- Blobs at pen-down
-- Tails at pen-up
-- Missed marks
-- Repeatability across the grid
-
-This section is sensitive to pen-down delay, pen-up delay, holder friction, and ink type.
+- Whether tiny circles stay open or fill in
+- Tone smoothness versus visible dot pattern
+- Ink build-up in dense samples
+- Paper damage or tearing from repeated small circles
 
 ## Observation Log
 

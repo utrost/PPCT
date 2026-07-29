@@ -56,12 +56,12 @@ The current A4 sheet contains these sections:
 
 - Metadata: test identification and notes
 - Geometry Reference: ruler ticks and a known-size rectangle
-- Stroke Characterisation: line quality at several stroke widths
 - Resolution Wedges: close parallel lines at decreasing spacing
-- Hatch Density: tone blocks using regular hatching
-- Curves & Corners: curves, turns, and radius changes
+- Hatch Density: five tone blocks using regular hatching, down to 0.5 mm spacing
+- Curves / Concentric: curve behaviour plus concentric circles at hatch-like spacings
+- Minimum Text Size: plotted text at several sizes to find the viable lower limit
 - Continuous Flow: long-path ink consistency
-- Pen Lift Reliability: repeated starts and stops
+- Stipple Gradient: small-circle stipple density samples
 - Observation Log: hand-written evaluation fields
 
 The SVG is generated from Python. Do not edit generated SVG files by hand; change the generator and regenerate.

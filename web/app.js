@@ -36,6 +36,10 @@
     return `<rect ${attrs({ x, y, width, height, ...extra })} />`;
   }
 
+  function circle(cx, cy, r, extra = {}) {
+    return `<circle ${attrs({ cx, cy, r, ...extra })} />`;
+  }
+
   function path(d, extra = {}) {
     return `<path ${attrs({ d, ...extra })} />`;
   }
@@ -54,12 +58,12 @@
   const sections = [
     { id: 'section-metadata', label: 'Metadata', x: 10, y: 10, w: 190, h: 24 },
     { id: 'section-geometry-reference', label: 'Geometry Reference', x: 10, y: 39, w: 190, h: 28 },
-    { id: 'section-stroke-characterisation', label: 'Stroke Characterisation', x: 10, y: 72, w: 90, h: 42 },
-    { id: 'section-resolution-wedges', label: 'Resolution Wedges', x: 110, y: 72, w: 90, h: 42 },
-    { id: 'section-hatch-density', label: 'Hatch Density', x: 10, y: 119, w: 90, h: 46 },
-    { id: 'section-curves-corners', label: 'Curves & Corners', x: 110, y: 119, w: 90, h: 46 },
+    { id: 'section-resolution-wedges', label: 'Resolution Wedges', x: 10, y: 72, w: 90, h: 42 },
+    { id: 'section-hatch-density', label: 'Hatch Density', x: 110, y: 72, w: 90, h: 42 },
+    { id: 'section-curves-concentric', label: 'Curves / Concentric', x: 10, y: 119, w: 90, h: 46 },
+    { id: 'section-text-sizes', label: 'Minimum Text Size', x: 110, y: 119, w: 90, h: 46 },
     { id: 'section-continuous-flow', label: 'Continuous Flow', x: 10, y: 170, w: 190, h: 39 },
-    { id: 'section-pen-lift-reliability', label: 'Pen Lift Reliability', x: 10, y: 214, w: 90, h: 43 },
+    { id: 'section-stipple-gradient', label: 'Stipple Gradient', x: 10, y: 214, w: 90, h: 43 },
     { id: 'section-observation-log', label: 'Observation Log', x: 110, y: 214, w: 90, h: 43 },
   ];
 
@@ -78,7 +82,7 @@
       ['Title', config.title || 'PPCT A4 Reference'],
       ['Operator', config.operator || '________________'],
       ['Date', config.date || '________________'],
-      ['Generator', 'web-0.2.0'],
+      ['Generator', 'web-0.4.0'],
     ];
     rows.forEach(([key, value], index) => {
       items.push(text(mx + 3, my + 9 + index * 4, `${key}: ${value}`, 2.6, { 'font-family': 'monospace' }));
@@ -97,14 +101,20 @@
     }
     items.push(text(gx + 126, gy + 23, '50 x 10 mm box', 2.2, { 'font-family': 'monospace' }));
 
-    [0.1, 0.2, 0.3, 0.5, 0.8].forEach((width, index) => {
-      items.push(text(84, 83.8 + index * 6, width.toFixed(1), 2, { 'font-family': 'monospace' }));
-    });
     [2, 1.5, 1, 0.7, 0.5, 0.3].forEach((spacing, index) => {
-      items.push(text(118 + index * 12, 107, `${spacing}mm`, 2, { 'font-family': 'monospace' }));
+      items.push(text(18 + index * 12, 109, `${spacing}mm`, 2, { 'font-family': 'monospace' }));
     });
-    [3, 2, 1.5, 1].forEach((spacing, index) => {
-      items.push(text(19 + index * 19, 158, `${spacing}mm`, 2, { 'font-family': 'monospace' }));
+    [3, 2, 1.5, 1, 0.5].forEach((spacing, index) => {
+      items.push(text(118 + index * 15, 109, `${spacing}mm`, 2, { 'font-family': 'monospace' }));
+    });
+    [3, 2, 1.5, 1, 0.5].forEach((spacing, index) => {
+      items.push(text(21 + index * 15, 162, `${spacing}mm`, 2, { 'font-family': 'monospace' }));
+    });
+    [4, 3, 2, 1.5, 1].forEach((size, index) => {
+      items.push(text(175, 132 + index * 6, `${size}mm`, 2, { 'font-family': 'monospace' }));
+    });
+    [20, 40, 60, 80].forEach((density, index) => {
+      items.push(text(20 + index * 19, 250, `${density}%`, 2, { 'font-family': 'monospace' }));
     });
 
     ['Line quality', 'Start/end', 'Feather/bleed', 'Suitability'].forEach((label, index) => {
@@ -136,20 +146,10 @@
     return plotSection('section-geometry-reference', body);
   }
 
-  function strokeCharacterisation() {
-    const x = 10, y = 72;
-    const widths = [0.1, 0.2, 0.3, 0.5, 0.8];
-    const body = widths.map((width, index) => {
-      const yy = y + 11 + index * 6;
-      return line(x + 8, yy, x + 72, yy, { stroke: '#000', 'stroke-width': width });
-    });
-    return plotSection('section-stroke-characterisation', body);
-  }
-
   function resolutionWedges() {
-    const x = 110, y = 72;
+    const x = 10, y = 72;
     const spacings = [2, 1.5, 1, 0.7, 0.5, 0.3];
-    const body = [];
+    const body = [line(x + 8, y + 34, x + 82, y + 34, { stroke: '#777', 'stroke-width': '0.12', 'data-axis': 'spacing-mm' })];
     spacings.forEach((spacing, index) => {
       const startX = x + 8 + index * 12;
       const yy = y + 10;
@@ -163,30 +163,44 @@
   }
 
   function hatchDensity() {
-    const x = 10, y = 119;
-    const body = [];
-    [3, 2, 1.5, 1].forEach((spacing, index) => {
-      const bx = x + 8 + index * 19;
+    const x = 110, y = 72;
+    const body = [line(x + 8, y + 34, x + 84, y + 34, { stroke: '#777', 'stroke-width': '0.12', 'data-axis': 'spacing-mm' })];
+    [3, 2, 1.5, 1, 0.5].forEach((spacing, index) => {
+      const bx = x + 8 + index * 15;
       const by = y + 10;
-      body.push(rect(bx, by, 15, 24, { fill: 'none', stroke: '#000', 'stroke-width': '0.15' }));
-      for (let n = 1; n * spacing < 15; n += 1) {
+      body.push(rect(bx, by, 12, 20, { fill: 'none', stroke: '#000', 'stroke-width': '0.15', 'data-test': `hatch-density-${spacing}mm` }));
+      for (let n = 1; n * spacing < 12; n += 1) {
         const xx = Math.round((bx + n * spacing) * 100) / 100;
-        body.push(line(xx, by, xx, by + 24, { stroke: '#000', 'stroke-width': '0.12' }));
+        body.push(line(xx, by, xx, by + 20, { stroke: '#000', 'stroke-width': '0.12' }));
       }
     });
     return plotSection('section-hatch-density', body);
   }
 
-  function curvesCorners() {
-    const x = 110, y = 119;
-    const body = [
-      path(`M ${x + 10} ${y + 34} C ${x + 22} ${y + 6}, ${x + 38} ${y + 6}, ${x + 50} ${y + 34} S ${x + 70} ${y + 62}, ${x + 80} ${y + 16}`, { fill: 'none', stroke: '#000', 'stroke-width': '0.25' }),
-    ];
-    [2, 4, 8, 12].forEach((radius, index) => {
-      const cx = x + 12 + index * 18;
-      body.push(path(`M ${cx} ${y + 18} h 8 a ${radius} ${radius} 0 0 1 ${radius} ${radius} v 8`, { fill: 'none', stroke: '#000', 'stroke-width': '0.2' }));
+  function curvesConcentric() {
+    const x = 10, y = 119;
+    const body = [line(x + 8, y + 39, x + 82, y + 39, { stroke: '#777', 'stroke-width': '0.12', 'data-axis': 'spacing-mm' })];
+    body.push(path(`M ${x + 8} ${y + 18} C ${x + 19} ${y + 6}, ${x + 33} ${y + 6}, ${x + 44} ${y + 18} S ${x + 66} ${y + 30}, ${x + 80} ${y + 13}`, { fill: 'none', stroke: '#000', 'stroke-width': '0.22' }));
+    [3, 2, 1.5, 1, 0.5].forEach((spacing, index) => {
+      const cx = x + 14 + index * 15;
+      const cy = y + 30;
+      let first = true;
+      for (let radius = 1.5; radius <= 6; radius += spacing) {
+        body.push(circle(cx, cy, Math.round(radius * 100) / 100, { fill: 'none', stroke: '#000', 'stroke-width': '0.12', 'data-test': first ? `concentric-spacing-${spacing}mm` : undefined }));
+        first = false;
+      }
     });
-    return plotSection('section-curves-corners', body);
+    return plotSection('section-curves-concentric', body);
+  }
+
+  function textSizes() {
+    const x = 110, y = 119;
+    const body = [line(x + 8, y + 39, x + 82, y + 39, { stroke: '#777', 'stroke-width': '0.12', 'data-axis': 'text-height-mm' })];
+    [4, 3, 2, 1.5, 1].forEach((size, index) => {
+      const yy = y + 13 + index * 6;
+      body.push(text(x + 8, yy, 'PPCT abc 123', size, { 'font-family': 'monospace', 'data-test': `text-size-${size.toFixed(1)}mm` }));
+    });
+    return plotSection('section-text-sizes', body);
   }
 
   function continuousFlow() {
@@ -205,18 +219,20 @@
     ]);
   }
 
-  function penLiftReliability() {
+  function stippleGradient() {
     const x = 10, y = 214;
-    const body = [];
-    for (let row = 0; row < 5; row += 1) {
-      for (let col = 0; col < 9; col += 1) {
-        const cx = x + 9 + col * 8;
-        const cy = y + 11 + row * 6;
-        body.push(line(cx - 2, cy, cx + 2, cy, { stroke: '#000', 'stroke-width': '0.18' }));
-        body.push(line(cx, cy - 2, cx, cy + 2, { stroke: '#000', 'stroke-width': '0.18' }));
+    const body = [line(x + 8, y + 36, x + 82, y + 36, { stroke: '#777', 'stroke-width': '0.12', 'data-axis': 'stipple-density-percent' })];
+    [20, 40, 60, 80].forEach((density, index) => {
+      const bx = x + 8 + index * 19;
+      const by = y + 10;
+      body.push(rect(bx, by, 15, 20, { fill: 'none', stroke: '#000', 'stroke-width': '0.12' }));
+      for (let n = 0; n < density / 4; n += 1) {
+        const cx = bx + 1.5 + ((n * 5) % 12);
+        const cy = by + 1.5 + ((n * 7) % 17);
+        body.push(circle(Math.round(cx * 100) / 100, Math.round(cy * 100) / 100, 0.28, { fill: 'none', stroke: '#000', 'stroke-width': '0.1', 'data-test': n === 0 ? `stipple-density-${density}` : undefined }));
       }
-    }
-    return plotSection('section-pen-lift-reliability', body);
+    });
+    return plotSection('section-stipple-gradient', body);
   }
 
   function observationLogPlotData() {
@@ -227,12 +243,12 @@
     return `<g id="layer-plot-data" data-layer="plot-data" inkscape:groupmode="layer" inkscape:label="Plot data / draw second">\n${[
       metadataPlotData(),
       geometryReference(),
-      strokeCharacterisation(),
       resolutionWedges(),
       hatchDensity(),
-      curvesCorners(),
+      curvesConcentric(),
+      textSizes(),
       continuousFlow(),
-      penLiftReliability(),
+      stippleGradient(),
       observationLogPlotData(),
     ].join('\n')}\n</g>`;
   }
@@ -277,7 +293,7 @@
       ['Title', config.title || 'PPCT A4 Reference'],
       ['Operator', config.operator || '________________'],
       ['Date', config.date || '________________'],
-      ['Generator', 'web-0.2.0'],
+      ['Generator', 'web-0.4.0'],
     ];
     rows.forEach(([key, value], index) => commands.push(pdfText(13, 19 + index * 4, `${key}: ${value}`, 7)));
     commands.push(pdfText(125, 19, 'Pen / paper / plotter notes:', 7));
@@ -286,9 +302,11 @@
     if (notes) commands.push(pdfText(127, 27, notes.length > 46 ? `${notes.slice(0, 43)}...` : notes, 6.5));
     for (let tick = 0; tick <= 100; tick += 10) commands.push(pdfText(13.5 + tick, 62, tick, 6));
     commands.push(pdfText(136, 62, '50 x 10 mm box', 6));
-    [0.1, 0.2, 0.3, 0.5, 0.8].forEach((width, index) => commands.push(pdfText(84, 83.8 + index * 6, width.toFixed(1), 6)));
-    [2, 1.5, 1, 0.7, 0.5, 0.3].forEach((spacing, index) => commands.push(pdfText(118 + index * 12, 107, `${spacing}mm`, 6)));
-    [3, 2, 1.5, 1].forEach((spacing, index) => commands.push(pdfText(19 + index * 19, 158, `${spacing}mm`, 6)));
+    [2, 1.5, 1, 0.7, 0.5, 0.3].forEach((spacing, index) => commands.push(pdfText(18 + index * 12, 109, `${spacing}mm`, 6)));
+    [3, 2, 1.5, 1, 0.5].forEach((spacing, index) => commands.push(pdfText(118 + index * 15, 109, `${spacing}mm`, 6)));
+    [3, 2, 1.5, 1, 0.5].forEach((spacing, index) => commands.push(pdfText(21 + index * 15, 162, `${spacing}mm`, 6)));
+    [4, 3, 2, 1.5, 1].forEach((size, index) => commands.push(pdfText(175, 132 + index * 6, `${size}mm`, 6)));
+    [20, 40, 60, 80].forEach((density, index) => commands.push(pdfText(20 + index * 19, 250, `${density}%`, 6)));
     ['Line quality', 'Start/end', 'Feather/bleed', 'Suitability'].forEach((label, index) => {
       const yy = 226 + index * 7;
       commands.push(pdfText(114, yy, `${label}:`, 7));

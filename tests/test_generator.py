@@ -24,15 +24,33 @@ class TargetGenerationTests(unittest.TestCase):
             "ppct-target",
             "section-metadata",
             "section-geometry-reference",
-            "section-stroke-characterisation",
             "section-resolution-wedges",
             "section-hatch-density",
-            "section-curves-corners",
+            "section-curves-concentric",
+            "section-text-sizes",
             "section-continuous-flow",
-            "section-pen-lift-reliability",
+            "section-stipple-gradient",
             "section-observation-log",
         }
         self.assertTrue(expected.issubset(ids))
+        self.assertNotIn("section-stroke-characterisation", ids)
+        self.assertNotIn("section-pen-lift-reliability", ids)
+
+    def test_target_has_readable_axes_and_new_pen_diagnostics(self):
+        from ppct import TargetConfig, generate_svg
+
+        svg = generate_svg(TargetConfig(title="Diagnostics"))
+
+        self.assertIn("0.5mm", svg)
+        self.assertIn('data-test="hatch-density-0.5mm"', svg)
+        self.assertIn('data-test="concentric-spacing-0.5mm"', svg)
+        self.assertIn('data-test="text-size-1.0mm"', svg)
+        self.assertIn('data-test="stipple-density-80"', svg)
+        self.assertIn('data-axis="spacing-mm"', svg)
+        self.assertIn('data-axis="text-height-mm"', svg)
+        self.assertIn('data-axis="stipple-density-percent"', svg)
+        self.assertNotIn("Stroke Characterisation", svg)
+        self.assertNotIn("Pen Lift Reliability", svg)
 
     def test_generation_is_deterministic_for_identical_config(self):
         from ppct import TargetConfig, generate_svg
