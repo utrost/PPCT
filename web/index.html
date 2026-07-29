@@ -58,9 +58,23 @@
           <h2 id="preview-title">Preview</h2>
           <p>A4 portrait, 210 mm x 297 mm.</p>
         </div>
-        <a class="source-link" href="https://github.com/utrost/PPCT">GitHub</a>
+        <div class="preview-tools">
+          <fieldset class="segmented-control" aria-label="Preview layers">
+            <label for="preview-both">
+              <input id="preview-both" name="preview-layers" type="radio" value="both" checked>
+              <span>Both layers</span>
+            </label>
+            <label for="preview-plot">
+              <input id="preview-plot" name="preview-layers" type="radio" value="plot">
+              <span>Plot layer only</span>
+            </label>
+          </fieldset>
+          <a class="source-link" href="https://github.com/utrost/PPCT">GitHub</a>
+        </div>
       </div>
-      <div id="svg-preview" class="svg-preview" aria-live="polite"></div>
+      <div id="svg-preview" class="svg-preview" aria-live="polite">
+        <img id="svg-preview-image" alt="PPCT target preview">
+      </div>
     </section>
   </main>
 

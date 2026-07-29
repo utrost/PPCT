@@ -166,6 +166,56 @@ button.secondary {
   margin-bottom: 12px;
 }
 
+.preview-tools {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.segmented-control {
+  display: flex;
+  gap: 0;
+  padding: 0;
+  margin: 0;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  overflow: hidden;
+  background: white;
+}
+
+.segmented-control label {
+  position: relative;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.segmented-control input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  width: 100%;
+  min-height: 100%;
+  cursor: pointer;
+}
+
+.segmented-control span {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 10px 14px;
+  color: var(--ink);
+}
+
+.segmented-control input:checked + span {
+  background: var(--accent);
+  color: white;
+}
+
 .svg-preview {
   overflow: auto;
   max-height: min(78vh, 920px);
@@ -175,7 +225,7 @@ button.secondary {
   background: #d8d0c3;
 }
 
-.svg-preview svg {
+.svg-preview img {
   display: block;
   width: min(100%, 620px);
   height: auto;

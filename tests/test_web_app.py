@@ -23,9 +23,20 @@ class WebGeneratorTests(unittest.TestCase):
         self.assertIn('id="date"', index)
         self.assertIn('id="notes"', index)
         self.assertIn('id="include-text"', index)
+        self.assertIn('id="preview-both"', index)
+        self.assertIn('id="preview-plot"', index)
+        self.assertIn('id="svg-preview-image"', index)
         self.assertIn('id="download-svg"', index)
         self.assertIn('id="download-template-pdf"', index)
         self.assertIn('id="svg-preview"', index)
+
+    def test_service_worker_prefers_network_and_claims_updates(self):
+        service_worker = (WEB / "sw.js").read_text(encoding="utf-8")
+
+        self.assertIn("ppct-web-v0.3.0", service_worker)
+        self.assertIn("self.skipWaiting()", service_worker)
+        self.assertIn("self.clients.claim()", service_worker)
+        self.assertLess(service_worker.index("fetch(request)"), service_worker.index("caches.match(request)"))
 
     def test_manifest_is_valid_for_subdirectory_deployments(self):
         manifest = json.loads((WEB / "manifest.webmanifest").read_text(encoding="utf-8"))
@@ -133,6 +144,17 @@ class WebGeneratorTests(unittest.TestCase):
         self.assertIn('id="layer-plot-data"', payload["plotOnly"])
         self.assertEqual(payload["pdfPrefix"], "%PDF-1.4")
         self.assertTrue(payload["pdfHasLabel"])
+
+    def test_preview_uses_image_data_url_for_firefox_compatibility(self):
+        app = (WEB / "app.js").read_text(encoding="utf-8")
+        styles = (WEB / "styles.css").read_text(encoding="utf-8")
+
+        self.assertIn("function svgDataUrl(svg)", app)
+        self.assertIn("encodeURIComponent(svg)", app)
+        self.assertIn("svg-preview-image", app)
+        self.assertNotIn("preview.innerHTML = generateSvg", app)
+        self.assertIn("input[name=\"preview-layers\"]", app)
+        self.assertIn(".svg-preview img", styles)
 
 
 if __name__ == "__main__":

@@ -331,10 +331,21 @@
     };
   }
 
+  function previewConfig() {
+    const config = currentConfig();
+    const mode = document.querySelector('input[name="preview-layers"]:checked')?.value || 'both';
+    if (mode === 'plot') config.includeText = false;
+    return config;
+  }
+
+  function svgDataUrl(svg) {
+    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+  }
+
   function render() {
-    const preview = document.getElementById('svg-preview');
-    if (!preview) return;
-    preview.innerHTML = generateSvg(currentConfig());
+    const previewImage = document.getElementById('svg-preview-image');
+    if (!previewImage) return;
+    previewImage.src = svgDataUrl(generateSvg(previewConfig()));
   }
 
   function downloadBlob(content, type, filename) {
@@ -372,6 +383,7 @@
   document.addEventListener('DOMContentLoaded', () => {
     resetForm();
     document.getElementById('generator-form').addEventListener('input', render);
+    document.querySelectorAll('input[name="preview-layers"]').forEach((input) => input.addEventListener('change', render));
     document.getElementById('download-svg').addEventListener('click', downloadSvg);
     document.getElementById('download-template-pdf').addEventListener('click', downloadTemplatePdf);
     document.getElementById('reset-form').addEventListener('click', resetForm);
