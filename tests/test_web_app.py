@@ -15,8 +15,8 @@ class WebGeneratorTests(unittest.TestCase):
 
         self.assertIn("PPCT Web Generator", index)
         self.assertIn('name="viewport"', index)
-        self.assertIn('href="./styles.css"', index)
-        self.assertIn('src="./app.js"', index)
+        self.assertIn('href="./styles.css?v=0.3.1"', index)
+        self.assertIn('src="./app.js?v=0.3.1"', index)
         self.assertIn('href="./manifest.webmanifest"', index)
         self.assertIn('id="title"', index)
         self.assertIn('id="operator"', index)
@@ -33,7 +33,7 @@ class WebGeneratorTests(unittest.TestCase):
     def test_service_worker_prefers_network_and_claims_updates(self):
         service_worker = (WEB / "sw.js").read_text(encoding="utf-8")
 
-        self.assertIn("ppct-web-v0.3.0", service_worker)
+        self.assertIn("ppct-web-v0.3.1", service_worker)
         self.assertIn("self.skipWaiting()", service_worker)
         self.assertIn("self.clients.claim()", service_worker)
         self.assertLess(service_worker.index("fetch(request)"), service_worker.index("caches.match(request)"))
