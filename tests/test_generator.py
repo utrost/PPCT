@@ -52,6 +52,26 @@ class TargetGenerationTests(unittest.TestCase):
         self.assertNotIn("Stroke Characterisation", svg)
         self.assertNotIn("Pen Lift Reliability", svg)
 
+    def test_target_second_pass_is_measurement_oriented(self):
+        from ppct import TargetConfig, generate_svg
+
+        svg = generate_svg(TargetConfig(title="Measurement ergonomics"))
+
+        self.assertIn('data-layout="measurement-v2"', svg)
+        self.assertIn('data-test="hatch-linear-0.5mm"', svg)
+        self.assertIn('data-test="hatch-cross-0.5mm"', svg)
+        self.assertIn('data-test="text-size-0.8mm"', svg)
+        self.assertIn("Il1 O0 8B", svg)
+        self.assertIn('data-test="concentric-closed-0.5mm"', svg)
+        self.assertIn('data-test="concentric-spiral-0.5mm"', svg)
+        self.assertIn('data-test="stipple-density-90"', svg)
+        self.assertIn('data-readout="min-line-spacing"', svg)
+        self.assertIn('data-readout="min-hatch-spacing"', svg)
+        self.assertIn('data-readout="min-text-size"', svg)
+        self.assertIn('data-readout="best-stipple-density"', svg)
+        self.assertIn("Min line spacing", svg)
+        self.assertIn("Best stipple", svg)
+
     def test_generation_is_deterministic_for_identical_config(self):
         from ppct import TargetConfig, generate_svg
 
