@@ -34,7 +34,9 @@ Do not continue if the printed ruler is wrong. Fix print scaling first.
 2. Inspect under good light.
 3. Fill in the observation log.
 4. Scan at 600 dpi colour if possible.
-5. Archive the SVG, scan, metadata, and notes in one folder.
+5. Copy [`docs/templates/metadata.md`](templates/metadata.md) and [`docs/templates/notes.md`](templates/notes.md) into the archive folder.
+6. Record SHA-256 checksums for the SVG, PDF template, and scan.
+7. Archive the SVG, PDF template, scan, metadata, and notes in one folder.
 
 ## Minimum metadata
 

@@ -22,7 +22,6 @@ Done:
 
 Remaining:
 
-- Add GitHub Actions test workflow
 - Add a small release process
 - Decide documentation license, if different from code license
 - Add generated SVG checksum to release notes

@@ -226,6 +226,19 @@ class WebGeneratorTests(unittest.TestCase):
         self.assertIn("input[name=\"preview-layers\"]", app)
         self.assertIn(".svg-preview img", styles)
 
+    def test_archive_templates_are_documented(self):
+        metadata = (ROOT / "docs" / "templates" / "metadata.md").read_text(encoding="utf-8")
+        notes = (ROOT / "docs" / "templates" / "notes.md").read_text(encoding="utf-8")
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        user_guide = (ROOT / "docs" / "user-guide.md").read_text(encoding="utf-8")
+
+        self.assertIn("Generated SVG SHA-256", metadata)
+        self.assertIn("Minimum separate line spacing", metadata)
+        self.assertIn("Section observations", notes)
+        self.assertIn("Continuous flow", notes)
+        self.assertIn("docs/templates/metadata.md", readme)
+        self.assertIn("sha256sum ppct-a4.svg", user_guide)
+
 
 if __name__ == "__main__":
     unittest.main()

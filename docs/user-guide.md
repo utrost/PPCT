@@ -151,6 +151,7 @@ Archive these files together:
 ```text
 YYYY-MM-DD_pen-paper-plotter/
 ├── ppct-a4.svg
+├── ppct-template.pdf
 ├── ppct-a4-plotted-scan.png
 ├── metadata.md
 └── notes.md
@@ -160,6 +161,17 @@ Suggested folder name:
 
 ```text
 2026-07-29_uniball-0.5_clairefontaine-90gsm_idrawh-a3/
+```
+
+Start from the repository templates if you do not already have your own lab-note format:
+
+- [`docs/templates/metadata.md`](templates/metadata.md)
+- [`docs/templates/notes.md`](templates/notes.md)
+
+Capture checksums after generation and scanning so later comparisons are attached to exact files:
+
+```bash
+sha256sum ppct-a4.svg ppct-template.pdf ppct-a4-plotted-scan.png
 ```
 
 The exact naming convention can change. The important rule is one folder per test condition.

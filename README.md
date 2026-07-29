@@ -71,6 +71,8 @@ The SVG is generated from Python. Do not edit generated SVG files by hand; chang
 - [`docs/user-guide.md`](docs/user-guide.md): how to generate, print, plot, inspect, and archive a test
 - [`docs/sop.md`](docs/sop.md): short operating procedure for running one PPCT sheet
 - [`docs/calibration-target.md`](docs/calibration-target.md): what each section measures
+- [`docs/templates/metadata.md`](docs/templates/metadata.md): copyable metadata record for one plotted sheet
+- [`docs/templates/notes.md`](docs/templates/notes.md): copyable observation notes for one plotted sheet
 - [`docs/developer-guide.md`](docs/developer-guide.md): project structure and development workflow
 - [`docs/roadmap.md`](docs/roadmap.md): current phases and next work
 - [`CONTRIBUTING.md`](CONTRIBUTING.md): contribution rules and pull request checklist
@@ -88,6 +90,9 @@ PPCT/
 │   ├── developer-guide.md
 │   ├── roadmap.md
 │   ├── sop.md
+│   ├── templates/
+│   │   ├── metadata.md
+│   │   └── notes.md
 │   └── user-guide.md
 ├── examples/
 │   └── ppct-a4.svg
