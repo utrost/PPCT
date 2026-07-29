@@ -1,0 +1,29 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ppct"
+version = "0.1.0"
+description = "PlotPen Characterization Target SVG generator"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [{ name = "Uwe Trostheide" }]
+keywords = ["pen-plotter", "svg", "calibration", "plotter-art"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "License :: OSI Approved :: MIT License",
+]
+dependencies = []
+
+[project.scripts]
+ppct = "ppct.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["ppct"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
