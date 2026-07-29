@@ -11,6 +11,8 @@ The target is not a formal standard. It is a practical sheet for comparing pens 
 - SVG viewBox: `0 0 210 297`
 - Units: millimetres
 - Default output: `output/ppct-a4.svg`
+- Browser SVG layers: `Template / print first` and `Plot data / draw second`
+- Browser template export: A4 PDF with labels, metadata fields, guide boxes, ruler labels, and observation lines
 
 The printed and plotted sheet should remain at 100% scale.
 

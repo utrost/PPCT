@@ -24,6 +24,7 @@ class WebGeneratorTests(unittest.TestCase):
         self.assertIn('id="notes"', index)
         self.assertIn('id="include-text"', index)
         self.assertIn('id="download-svg"', index)
+        self.assertIn('id="download-template-pdf"', index)
         self.assertIn('id="svg-preview"', index)
 
     def test_manifest_is_valid_for_subdirectory_deployments(self):
@@ -94,9 +95,44 @@ class WebGeneratorTests(unittest.TestCase):
         payload = json.loads(result.stdout)
         self.assertIn("Pilot G2 / Clairefontaine / iDraw H", payload["withNotes"])
         self.assertIn("Pen / paper / plotter notes:", payload["withNotes"])
+        self.assertIn("id=\"layer-template\"", payload["withNotes"])
+        self.assertIn("id=\"layer-plot-data\"", payload["withNotes"])
         self.assertIn("section-geometry-reference", payload["geometryOnly"])
         self.assertNotIn("Curves &amp; Corners", payload["geometryOnly"])
         self.assertNotIn("Pen / paper / plotter notes:", payload["geometryOnly"])
+
+    def test_svg_has_template_and_plot_data_layers(self):
+        script = """
+        const { readFileSync } = require('fs');
+        const vm = require('vm');
+        const code = readFileSync('web/app.js', 'utf8');
+        const context = { window: {}, document: { addEventListener() {} }, URL, Blob, console };
+        vm.createContext(context);
+        vm.runInContext(code, context);
+        const layered = context.window.PPCT.generateSvg({ title: 'Layer test' });
+        const plotOnly = context.window.PPCT.generateSvg({ includeText: false });
+        const pdf = context.window.PPCT.generateTemplatePdf({ title: 'Layer test' });
+        console.log(JSON.stringify({ layered, plotOnly, pdfPrefix: pdf.slice(0, 8), pdfHasLabel: pdf.includes('PPCT printable template') }));
+        """
+        result = subprocess.run(["node", "-e", script], cwd=ROOT, text=True, capture_output=True)
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        root = ET.fromstring(payload["layered"])
+        ids = {element.attrib.get("id") for element in root.iter()}
+        self.assertIn("layer-template", ids)
+        self.assertIn("layer-plot-data", ids)
+        text_parent_ids = []
+        for parent in root.iter():
+            for child in list(parent):
+                if child.tag.endswith("text"):
+                    text_parent_ids.append(parent.attrib.get("id"))
+        self.assertTrue(text_parent_ids)
+        self.assertTrue(all(parent_id == "layer-template" for parent_id in text_parent_ids))
+        self.assertNotIn('id="layer-template"', payload["plotOnly"])
+        self.assertIn('id="layer-plot-data"', payload["plotOnly"])
+        self.assertEqual(payload["pdfPrefix"], "%PDF-1.4")
+        self.assertTrue(payload["pdfHasLabel"])
 
 
 if __name__ == "__main__":

@@ -18,9 +18,9 @@
       <h1 id="app-title">PPCT Web Generator</h1>
       <p>
         Generate an A4 PlotPen Characterization Target SVG without installing Python.
-        Fill the metadata, download the SVG, then print it at 100% scale.
+        The SVG has two layers: a printable template layer and a plot-data layer.
       </p>
-      <p class="note">Do not fit to page. The geometry reference is only useful at true scale.</p>
+      <p class="note">Print the template at 100%. Do not fit to page. Then plot the data layer on top.</p>
     </section>
 
     <section class="panel controls" aria-labelledby="controls-title">
@@ -40,12 +40,13 @@
 
         <label class="check-row" for="include-text">
           <input id="include-text" name="include-text" type="checkbox" checked>
-          <span>Plot labels and metadata text</span>
+          <span>Include printable template layer in SVG</span>
         </label>
-        <p class="hint">Turn this off for thicker pens when plotting onto a preprinted reference sheet.</p>
+        <p class="hint">Leave this on for a two-layer SVG. Turn it off for a plot-data-only SVG when your plotting software cannot hide layers.</p>
 
         <div class="actions">
           <button type="button" id="download-svg">Download SVG</button>
+          <button type="button" id="download-template-pdf" class="secondary">Download template PDF</button>
           <button type="button" id="reset-form" class="secondary">Reset</button>
         </div>
       </form>
