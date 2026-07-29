@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="PPCT">
+  <rect width="512" height="512" rx="96" fill="#111"/>
+  <rect x="92" y="82" width="328" height="348" rx="18" fill="#fffdf8"/>
+  <path d="M136 152h240M136 208h132M136 264h240M136 320h180" fill="none" stroke="#111" stroke-width="22" stroke-linecap="round"/>
+  <path d="M328 188c38 28 56 62 54 100-2 42-30 78-84 108" fill="none" stroke="#c66a32" stroke-width="24" stroke-linecap="round"/>
+</svg>
