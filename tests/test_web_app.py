@@ -15,8 +15,8 @@ class WebGeneratorTests(unittest.TestCase):
 
         self.assertIn("PPCT Web Generator", index)
         self.assertIn('name="viewport"', index)
-        self.assertIn('href="./styles.css?v=0.5.0"', index)
-        self.assertIn('src="./app.js?v=0.5.0"', index)
+        self.assertIn('href="./styles.css?v=0.5.1"', index)
+        self.assertIn('src="./app.js?v=0.5.1"', index)
         self.assertIn('href="./manifest.webmanifest"', index)
         self.assertIn('id="title"', index)
         self.assertIn('id="operator"', index)
@@ -33,7 +33,7 @@ class WebGeneratorTests(unittest.TestCase):
     def test_service_worker_prefers_network_and_claims_updates(self):
         service_worker = (WEB / "sw.js").read_text(encoding="utf-8")
 
-        self.assertIn("ppct-web-v0.5.0", service_worker)
+        self.assertIn("ppct-web-v0.5.1", service_worker)
         self.assertIn("self.skipWaiting()", service_worker)
         self.assertIn("self.clients.claim()", service_worker)
         self.assertLess(service_worker.index("fetch(request)"), service_worker.index("caches.match(request)"))
@@ -116,7 +116,7 @@ class WebGeneratorTests(unittest.TestCase):
         self.assertNotIn("Stroke Characterisation", svg)
         self.assertNotIn("Pen Lift Reliability", svg)
         self.assertIn("Hatch Density", payload["pdf"])
-        self.assertIn("0.5mm", payload["pdf"])
+        self.assertIn("0.5", payload["pdf"])
         self.assertIn("Minimum Text Size", payload["pdf"])
         self.assertIn("Stipple Gradient", payload["pdf"])
 
@@ -204,12 +204,17 @@ class WebGeneratorTests(unittest.TestCase):
         self.assertIn("layer-template", ids)
         self.assertIn("layer-plot-data", ids)
         text_parent_ids = []
+        text_size_line_count = 0
         for parent in root.iter():
             for child in list(parent):
                 if child.tag.endswith("text"):
                     text_parent_ids.append(parent.attrib.get("id"))
+                if parent.attrib.get("id") == "section-text-sizes" and child.tag.endswith("g"):
+                    text_size_line_count += sum(1 for grandchild in child if grandchild.tag.endswith("line"))
         self.assertTrue(text_parent_ids)
-        self.assertTrue(all(parent_id in {"layer-template", "section-text-sizes"} for parent_id in text_parent_ids))
+        self.assertTrue(all(parent_id == "layer-template" for parent_id in text_parent_ids))
+        self.assertGreater(text_size_line_count, 0)
+        self.assertIn('data-sample="PPCT abc 123 Il1 O0 8B"', payload["layered"])
         self.assertNotIn('id="layer-template"', payload["plotOnly"])
         self.assertIn('id="layer-plot-data"', payload["plotOnly"])
         self.assertEqual(payload["pdfPrefix"], "%PDF-1.4")

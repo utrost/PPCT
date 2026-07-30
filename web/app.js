@@ -2,7 +2,7 @@
   const A4_WIDTH = 210;
   const A4_HEIGHT = 297;
   const PT_PER_MM = 72 / 25.4;
-  const VERSION = 'web-0.5.0';
+  const VERSION = 'web-0.5.1';
 
   const sections = [
     { id: 'section-metadata', label: 'Metadata', x: 10, y: 10, w: 190, h: 22 },
@@ -46,6 +46,70 @@
   function circle(cx, cy, r, extra = {}) { return `<circle ${attrs({ cx, cy, r, ...extra })} />`; }
   function path(d, extra = {}) { return `<path ${attrs({ d, ...extra })} />`; }
   function text(x, y, content, size = 3, extra = {}) { return `<text ${attrs({ x, y, 'font-size': size, ...extra })}>${escapeXml(content)}</text>`; }
+
+  const vectorGlyphs = {
+    A: ['01110', '10001', '10001', '11111', '10001', '10001', '10001'],
+    B: ['11110', '10001', '10001', '11110', '10001', '10001', '11110'],
+    C: ['01111', '10000', '10000', '10000', '10000', '10000', '01111'],
+    I: ['11111', '00100', '00100', '00100', '00100', '00100', '11111'],
+    O: ['01110', '10001', '10001', '10001', '10001', '10001', '01110'],
+    P: ['11110', '10001', '10001', '11110', '10000', '10000', '10000'],
+    T: ['11111', '00100', '00100', '00100', '00100', '00100', '00100'],
+    a: ['00000', '00000', '01110', '00001', '01111', '10001', '01111'],
+    b: ['10000', '10000', '11110', '10001', '10001', '10001', '11110'],
+    c: ['00000', '00000', '01111', '10000', '10000', '10000', '01111'],
+    l: ['00100', '00100', '00100', '00100', '00100', '00100', '00110'],
+    0: ['01110', '10001', '10011', '10101', '11001', '10001', '01110'],
+    1: ['00100', '01100', '00100', '00100', '00100', '00100', '01110'],
+    2: ['01110', '10001', '00001', '00010', '00100', '01000', '11111'],
+    3: ['11110', '00001', '00001', '01110', '00001', '00001', '11110'],
+    8: ['01110', '10001', '10001', '01110', '10001', '10001', '01110'],
+  };
+
+  function vectorGlyph(x, baselineY, char, height, extra = {}) {
+    if (char === ' ') return [];
+    const rows = vectorGlyphs[char] || vectorGlyphs[char.toUpperCase()] || vectorGlyphs.C;
+    const unit = height / 7;
+    const topY = baselineY - height;
+    const segments = [];
+    rows.forEach((row, ry) => {
+      let start = -1;
+      for (let cx = 0; cx <= row.length; cx += 1) {
+        if (row[cx] === '1' && start === -1) start = cx;
+        if ((row[cx] !== '1' || cx === row.length) && start !== -1) {
+          segments.push(line(Math.round((x + start * unit) * 100) / 100, Math.round((topY + ry * unit) * 100) / 100, Math.round((x + cx * unit) * 100) / 100, Math.round((topY + ry * unit) * 100) / 100, extra));
+          start = -1;
+        }
+      }
+    });
+    for (let cx = 0; cx < 5; cx += 1) {
+      let start = -1;
+      for (let ry = 0; ry <= 7; ry += 1) {
+        const on = ry < 7 && rows[ry][cx] === '1';
+        if (on && start === -1) start = ry;
+        if ((!on || ry === 7) && start !== -1) {
+          segments.push(line(Math.round((x + cx * unit) * 100) / 100, Math.round((topY + start * unit) * 100) / 100, Math.round((x + cx * unit) * 100) / 100, Math.round((topY + ry * unit) * 100) / 100, extra));
+          start = -1;
+        }
+      }
+    }
+    return segments;
+  }
+
+  function vectorText(x, baselineY, content, height, extra = {}) {
+    const body = [];
+    const advance = height * 0.78;
+    const lineAttrs = {
+      fill: extra.fill,
+      stroke: extra.stroke,
+      'stroke-width': extra['stroke-width'],
+    };
+    [...String(content)].forEach((char, index) => {
+      body.push(...vectorGlyph(x + index * advance, baselineY, char, height, lineAttrs));
+    });
+    return `<g ${attrs(extra)}>\n${body.join('\n')}\n</g>`;
+  }
+
   function plotSection(sectionId, body) { return `<g id="${sectionId}" data-layer="plot-data">\n${body.join('\n')}\n</g>`; }
   function styleFor(kind) {
     if (kind === 'guide') return { fill: 'none', stroke: '#bbb', 'stroke-width': '0.2' };
@@ -164,7 +228,7 @@
     [4, 3, 2, 1.5, 1, 0.8].forEach((size, index) => {
       const yy = Math.round((y + 12 + index * 6.2) * 100) / 100;
       const sample = size <= 1 ? 'PPCT abc 123 Il1 O0 8B' : 'PPCT abc 123';
-      body.push(text(x + 7, yy, sample, size, { 'font-family': 'monospace', 'data-test': `text-size-${size.toFixed(1)}mm` }));
+      body.push(vectorText(x + 7, yy, sample, size, { fill: 'none', stroke: '#000', 'stroke-width': '0.12', 'data-test': `text-size-${size.toFixed(1)}mm`, 'data-sample': sample }));
     });
     return plotSection('section-text-sizes', body);
   }
@@ -253,10 +317,11 @@
       commands.push(pdfText(xx, yy, `${label}:`, 7));
       commands.push(pdfLine(xx + 40, yy - 0.8, xx + 70, yy - 0.8));
     });
-    commands.push(pdfText(16, 110, '0.5mm'));
-    commands.push(pdfText(116, 110, '0.5mm'));
-    commands.push(pdfText(112, 126, 'Minimum Text Size'));
-    commands.push(pdfText(12, 186, 'Stipple Gradient'));
+    [2, 1.5, 1, 0.7, 0.5, 0.3].forEach((spacing, index) => commands.push(pdfText(16.5 + index * 13, 107, `${spacing}`, 5.4)));
+    [3, 2, 1.5, 1, 0.5].forEach((spacing, index) => commands.push(pdfText(115.5 + index * 16, 107, `${spacing}`, 5.4)));
+    [2, 1.5, 1, 0.5].forEach((spacing, index) => commands.push(pdfText(21 + index * 19, 174, `${spacing}`, 5.1)));
+    [4, 3, 2, 1.5, 1, 0.8].forEach((size, index) => commands.push(pdfText(183, 133 + index * 6.2, `${size}`, 5.1)));
+    [10, 25, 50, 75, 90].forEach((density, index) => commands.push(pdfText(25 + index * 35, 218, `${density}%`, 5.4)));
     const stream = commands.join('\n');
     const objects = [
       '<< /Type /Catalog /Pages 2 0 R >>',
