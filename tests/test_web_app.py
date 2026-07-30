@@ -1,4 +1,5 @@
 import json
+import re
 import subprocess
 import unittest
 from pathlib import Path
@@ -15,8 +16,8 @@ class WebGeneratorTests(unittest.TestCase):
 
         self.assertIn("PPCT Web Generator", index)
         self.assertIn('name="viewport"', index)
-        self.assertIn('href="./styles.css?v=0.5.1"', index)
-        self.assertIn('src="./app.js?v=0.5.1"', index)
+        self.assertIn('href="./styles.css?v=0.5.2"', index)
+        self.assertIn('src="./app.js?v=0.5.2"', index)
         self.assertIn('href="./manifest.webmanifest"', index)
         self.assertIn('id="title"', index)
         self.assertIn('id="operator"', index)
@@ -33,7 +34,7 @@ class WebGeneratorTests(unittest.TestCase):
     def test_service_worker_prefers_network_and_claims_updates(self):
         service_worker = (WEB / "sw.js").read_text(encoding="utf-8")
 
-        self.assertIn("ppct-web-v0.5.1", service_worker)
+        self.assertIn("ppct-web-v0.5.2", service_worker)
         self.assertIn("self.skipWaiting()", service_worker)
         self.assertIn("self.clients.claim()", service_worker)
         self.assertLess(service_worker.index("fetch(request)"), service_worker.index("caches.match(request)"))
@@ -140,6 +141,8 @@ class WebGeneratorTests(unittest.TestCase):
         self.assertIn('data-layout="measurement-v2"', svg)
         self.assertIn('data-test="hatch-linear-0.5mm"', svg)
         self.assertIn('data-test="hatch-cross-0.5mm"', svg)
+        self.assertIn('data-test="text-size-6.0mm"', svg)
+        self.assertIn('data-test="text-size-5.0mm"', svg)
         self.assertIn('data-test="text-size-0.8mm"', svg)
         self.assertIn("Il1 O0 8B", svg)
         self.assertIn('data-test="concentric-closed-0.5mm"', svg)
@@ -151,6 +154,37 @@ class WebGeneratorTests(unittest.TestCase):
         self.assertIn('data-readout="best-stipple-density"', svg)
         self.assertIn("Min line spacing", payload["pdf"])
         self.assertIn("Best stipple", payload["pdf"])
+
+    def test_browser_post_print_findings_add_large_text_and_dense_stipple(self):
+        script = """
+        const { readFileSync } = require('fs');
+        const vm = require('vm');
+        const code = readFileSync('web/app.js', 'utf8');
+        const context = { window: {}, document: { addEventListener() {} }, URL, Blob, console };
+        vm.createContext(context);
+        vm.runInContext(code, context);
+        const svg = context.window.PPCT.generateSvg({ title: 'Printed sheet findings' });
+        const pdf = context.window.PPCT.generateTemplatePdf({ title: 'Printed sheet findings' });
+        console.log(JSON.stringify({ svg, pdf }));
+        """
+        result = subprocess.run(["node", "-e", script], cwd=ROOT, text=True, capture_output=True)
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        payload = json.loads(result.stdout)
+        svg = payload["svg"]
+        self.assertIn('data-test="text-size-6.0mm"', svg)
+        self.assertIn('data-test="text-size-5.0mm"', svg)
+        self.assertIn("6", payload["pdf"])
+        self.assertIn("5", payload["pdf"])
+        counts = {
+            int(density): len(re.findall(rf'data-stipple-density="{density}"', svg))
+            for density in [10, 25, 50, 75, 90]
+        }
+        self.assertGreaterEqual(counts[10], 15)
+        self.assertGreaterEqual(counts[25], 40)
+        self.assertGreaterEqual(counts[50], 80)
+        self.assertGreaterEqual(counts[75], 125)
+        self.assertGreaterEqual(counts[90], 150)
 
     def test_browser_generator_can_print_notes_and_omit_plotted_text(self):
         script = """
@@ -214,7 +248,7 @@ class WebGeneratorTests(unittest.TestCase):
         self.assertTrue(text_parent_ids)
         self.assertTrue(all(parent_id == "layer-template" for parent_id in text_parent_ids))
         self.assertGreater(text_size_line_count, 0)
-        self.assertIn('data-sample="PPCT abc 123 Il1 O0 8B"', payload["layered"])
+        self.assertIn('data-sample="Il1 O0 8B"', payload["layered"])
         self.assertNotIn('id="layer-template"', payload["plotOnly"])
         self.assertIn('id="layer-plot-data"', payload["plotOnly"])
         self.assertEqual(payload["pdfPrefix"], "%PDF-1.4")

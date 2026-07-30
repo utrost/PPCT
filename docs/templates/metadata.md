@@ -70,6 +70,6 @@ Use one copy of this file per plotted sheet. Keep unknown values blank rather th
 - Minimum separate line spacing:
 - Minimum usable hatch spacing:
 - Minimum readable plotted text:
-- Best stipple density:
+- Best stipple density / note if the dense gradient still needs more dots:
 - Continuous flow behaviour:
 - Overall note:

@@ -44,6 +44,8 @@ One sentence: pen, paper, plotter, speed, and anything unusual.
 
 ### Minimum text size
 
+- 6 mm readable?:
+- 5 mm readable?:
 - Smallest readable normal text:
 - Smallest readable ambiguous characters:
 - Character-specific failures:

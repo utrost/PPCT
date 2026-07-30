@@ -7,7 +7,7 @@ from xml.sax.saxutils import escape
 A4_WIDTH_MM = 210
 A4_HEIGHT_MM = 297
 MARGIN_MM = 10
-GENERATOR_VERSION = "0.5.0"
+GENERATOR_VERSION = "0.5.2"
 
 
 @dataclass(frozen=True)
@@ -173,12 +173,21 @@ def _curves_concentric() -> str:
 def _text_sizes() -> str:
     x, y, w, h = 108, 121, 92, 56
     body = _axis(x + 7, y + 50, 78, "text height mm", attr="text-height-mm")
-    sizes = [4.0, 3.0, 2.0, 1.5, 1.0, 0.8]
-    for idx, size in enumerate(sizes):
-        yy = y + 12 + idx * 6.2
-        sample = "PPCT abc 123 Il1 O0 8B" if size <= 1.0 else "PPCT abc 123"
-        body.append(_text(x + 7, round(yy, 2), sample, size, font_family="monospace", data_test=f"text-size-{size:.1f}mm"))
-        body.append(_text(x + 75, round(yy, 2), f"{size:g}", 1.8, font_family="monospace"))
+    # Two-column layout keeps the compact section while adding printed-sheet
+    # findings for 6 mm and 5 mm text.
+    samples = [
+        (6.0, x + 7, y + 14, "PPCT 123"),
+        (5.0, x + 7, y + 23, "PPCT 123"),
+        (4.0, x + 7, y + 31, "PPCT abc 123"),
+        (3.0, x + 7, y + 39, "PPCT abc 123"),
+        (2.0, x + 55, y + 14, "PPCT abc 123"),
+        (1.5, x + 55, y + 23, "PPCT abc 123"),
+        (1.0, x + 55, y + 32, "Il1 O0 8B"),
+        (0.8, x + 55, y + 40, "Il1 O0 8B"),
+    ]
+    for size, xx, yy, sample in samples:
+        body.append(_text(xx, round(yy, 2), sample, size, font_family="monospace", data_test=f"text-size-{size:.1f}mm"))
+        body.append(_text(xx, round(yy + 3.2, 2), f"{size:g}mm", 1.6, font_family="monospace"))
     return _group("section-text-sizes", "Minimum Text Size", x, y, w, h, body)
 
 
@@ -190,11 +199,13 @@ def _stipple_gradient() -> str:
         bx = x + 7 + idx * 35
         by = y + 10
         body.append(_rect(bx, by, 28, 22, fill="none", stroke="#000", stroke_width="0.12"))
-        count = max(3, density // 3)
+        count = max(15, density * 5 // 3)
         for n in range(count):
-            cx = bx + 2 + ((n * 7) % 24)
-            cy = by + 2 + ((n * 11) % 18)
-            body.append(_circle(round(cx, 2), round(cy, 2), 0.28, fill="none", stroke="#000", stroke_width="0.1", data_test=f"stipple-density-{density}" if n == 0 else None))
+            # Deterministic pseudo-random placement; intentionally much denser
+            # than v0.5.1 after the first real print looked too sparse.
+            cx = bx + 1.5 + (((n * 37 + density * 11) % 250) / 10)
+            cy = by + 1.5 + (((n * 53 + density * 7) % 190) / 10)
+            body.append(_circle(round(cx, 2), round(cy, 2), 0.28, fill="none", stroke="#000", stroke_width="0.1", data_test=f"stipple-density-{density}" if n == 0 else None, data_stipple_density=density))
         body.append(_text(bx + 8, y + 36, f"{density}%", 1.9, font_family="monospace"))
     return _group("section-stipple-gradient", "Stipple Gradient", x, y, w, h, body)
 
