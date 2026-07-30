@@ -1,4 +1,5 @@
 import hashlib
+import re
 import subprocess
 import sys
 import tempfile
@@ -60,6 +61,8 @@ class TargetGenerationTests(unittest.TestCase):
         self.assertIn('data-layout="measurement-v2"', svg)
         self.assertIn('data-test="hatch-linear-0.5mm"', svg)
         self.assertIn('data-test="hatch-cross-0.5mm"', svg)
+        self.assertIn('data-test="text-size-6.0mm"', svg)
+        self.assertIn('data-test="text-size-5.0mm"', svg)
         self.assertIn('data-test="text-size-0.8mm"', svg)
         self.assertIn("Il1 O0 8B", svg)
         self.assertIn('data-test="concentric-closed-0.5mm"', svg)
@@ -71,6 +74,23 @@ class TargetGenerationTests(unittest.TestCase):
         self.assertIn('data-readout="best-stipple-density"', svg)
         self.assertIn("Min line spacing", svg)
         self.assertIn("Best stipple", svg)
+
+    def test_post_print_findings_add_large_text_and_dense_stipple(self):
+        from ppct import TargetConfig, generate_svg
+
+        svg = generate_svg(TargetConfig(title="Printed sheet findings"))
+
+        self.assertRegex(svg, r'data-test="text-size-6\.0mm"')
+        self.assertRegex(svg, r'data-test="text-size-5\.0mm"')
+        counts = {
+            int(density): len(re.findall(rf'data-stipple-density="{density}"', svg))
+            for density in [10, 25, 50, 75, 90]
+        }
+        self.assertGreaterEqual(counts[10], 15)
+        self.assertGreaterEqual(counts[25], 40)
+        self.assertGreaterEqual(counts[50], 80)
+        self.assertGreaterEqual(counts[75], 125)
+        self.assertGreaterEqual(counts[90], 150)
 
     def test_generation_is_deterministic_for_identical_config(self):
         from ppct import TargetConfig, generate_svg

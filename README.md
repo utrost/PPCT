@@ -59,9 +59,9 @@ The current A4 sheet contains these sections:
 - Resolution Wedges: separated mini-panels for close parallel lines from 2 to 0.3 mm
 - Hatch Density: linear and cross-hatch samples, down to 0.5 mm spacing
 - Curves / Concentric: curve behaviour plus closed/spiral concentric samples
-- Minimum Text Size: plotted text from 4 to 0.8 mm, including ambiguous characters
+- Minimum Text Size: plotted text from 6 to 0.8 mm, including ambiguous characters
 - Continuous Flow: long-path ink consistency
-- Stipple Gradient: small-circle stipple density samples from 10 to 90 percent
+- Stipple Gradient: dense small-circle stipple samples from 10 to 90 percent
 - Observation / Readout: hand-written parameter fields for the useful thresholds
 
 The SVG is generated from Python. Do not edit generated SVG files by hand; change the generator and regenerate.

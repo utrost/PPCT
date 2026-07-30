@@ -2,7 +2,7 @@
   const A4_WIDTH = 210;
   const A4_HEIGHT = 297;
   const PT_PER_MM = 72 / 25.4;
-  const VERSION = 'web-0.5.1';
+  const VERSION = 'web-0.5.2';
 
   const sections = [
     { id: 'section-metadata', label: 'Metadata', x: 10, y: 10, w: 190, h: 22 },
@@ -142,7 +142,7 @@
     [2, 1.5, 1, 0.7, 0.5, 0.3].forEach((spacing, index) => items.push(text(16.5 + index * 13, 107, `${spacing}`, 1.9, { 'font-family': 'monospace' })));
     [3, 2, 1.5, 1, 0.5].forEach((spacing, index) => items.push(text(115.5 + index * 16, 107, `${spacing}`, 1.9, { 'font-family': 'monospace' })));
     [2, 1.5, 1, 0.5].forEach((spacing, index) => items.push(text(21 + index * 19, 174, `${spacing}`, 1.8, { 'font-family': 'monospace' })));
-    [4, 3, 2, 1.5, 1, 0.8].forEach((size, index) => items.push(text(183, 133 + index * 6.2, `${size}`, 1.8, { 'font-family': 'monospace' })));
+    [[6, 183, 138], [5, 183, 147], [4, 183, 155], [3, 183, 163], [2, 156, 138], [1.5, 156, 147], [1, 156, 156], [0.8, 156, 164]].forEach(([size, xx, yy]) => items.push(text(xx, yy, `${size}`, 1.6, { 'font-family': 'monospace' })));
     [10, 25, 50, 75, 90].forEach((density, index) => items.push(text(25 + index * 35, 218, `${density}%`, 1.9, { 'font-family': 'monospace' })));
     [['Min line spacing', 'min-line-spacing', 'mm'], ['Min hatch spacing', 'min-hatch-spacing', 'mm'], ['Min text size', 'min-text-size', 'mm'], ['Best stipple', 'best-stipple-density', '%']].forEach(([label, key, unit], index) => {
       const xx = 15 + (index % 2) * 92;
@@ -225,10 +225,17 @@
   function textSizes() {
     const x = 108, y = 121;
     const body = axis(x + 7, y + 50, 78, 'text height mm', 'text-height-mm');
-    [4, 3, 2, 1.5, 1, 0.8].forEach((size, index) => {
-      const yy = Math.round((y + 12 + index * 6.2) * 100) / 100;
-      const sample = size <= 1 ? 'PPCT abc 123 Il1 O0 8B' : 'PPCT abc 123';
-      body.push(vectorText(x + 7, yy, sample, size, { fill: 'none', stroke: '#000', 'stroke-width': '0.12', 'data-test': `text-size-${size.toFixed(1)}mm`, 'data-sample': sample }));
+    [
+      [6, x + 7, y + 14, 'PPCT 123'],
+      [5, x + 7, y + 23, 'PPCT 123'],
+      [4, x + 7, y + 31, 'PPCT abc 123'],
+      [3, x + 7, y + 39, 'PPCT abc 123'],
+      [2, x + 55, y + 14, 'PPCT abc 123'],
+      [1.5, x + 55, y + 23, 'PPCT abc 123'],
+      [1, x + 55, y + 32, 'Il1 O0 8B'],
+      [0.8, x + 55, y + 40, 'Il1 O0 8B'],
+    ].forEach(([size, xx, yy, sample]) => {
+      body.push(vectorText(xx, yy, sample, size, { fill: 'none', stroke: '#000', 'stroke-width': '0.12', 'data-test': `text-size-${size.toFixed(1)}mm`, 'data-sample': sample }));
     });
     return plotSection('section-text-sizes', body);
   }
@@ -240,11 +247,11 @@
       const bx = x + 7 + index * 35;
       const by = y + 10;
       body.push(rect(bx, by, 28, 22, { fill: 'none', stroke: '#000', 'stroke-width': '0.12' }));
-      const count = Math.max(3, Math.floor(density / 3));
+      const count = Math.max(15, Math.floor((density * 5) / 3));
       for (let n = 0; n < count; n += 1) {
-        const cx = bx + 2 + ((n * 7) % 24);
-        const cy = by + 2 + ((n * 11) % 18);
-        body.push(circle(Math.round(cx * 100) / 100, Math.round(cy * 100) / 100, 0.28, { fill: 'none', stroke: '#000', 'stroke-width': '0.1', 'data-test': n === 0 ? `stipple-density-${density}` : undefined }));
+        const cx = bx + 1.5 + (((n * 37 + density * 11) % 250) / 10);
+        const cy = by + 1.5 + (((n * 53 + density * 7) % 190) / 10);
+        body.push(circle(Math.round(cx * 100) / 100, Math.round(cy * 100) / 100, 0.28, { fill: 'none', stroke: '#000', 'stroke-width': '0.1', 'data-test': n === 0 ? `stipple-density-${density}` : undefined, 'data-stipple-density': density }));
       }
     });
     return plotSection('section-stipple-gradient', body);
@@ -320,7 +327,7 @@
     [2, 1.5, 1, 0.7, 0.5, 0.3].forEach((spacing, index) => commands.push(pdfText(16.5 + index * 13, 107, `${spacing}`, 5.4)));
     [3, 2, 1.5, 1, 0.5].forEach((spacing, index) => commands.push(pdfText(115.5 + index * 16, 107, `${spacing}`, 5.4)));
     [2, 1.5, 1, 0.5].forEach((spacing, index) => commands.push(pdfText(21 + index * 19, 174, `${spacing}`, 5.1)));
-    [4, 3, 2, 1.5, 1, 0.8].forEach((size, index) => commands.push(pdfText(183, 133 + index * 6.2, `${size}`, 5.1)));
+    [[6, 183, 138], [5, 183, 147], [4, 183, 155], [3, 183, 163], [2, 156, 138], [1.5, 156, 147], [1, 156, 156], [0.8, 156, 164]].forEach(([size, xx, yy]) => commands.push(pdfText(xx, yy, `${size}`, 4.8)));
     [10, 25, 50, 75, 90].forEach((density, index) => commands.push(pdfText(25 + index * 35, 218, `${density}%`, 5.4)));
     const stream = commands.join('\n');
     const objects = [
