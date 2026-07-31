@@ -2,7 +2,7 @@
   const A4_WIDTH = 210;
   const A4_HEIGHT = 297;
   const PT_PER_MM = 72 / 25.4;
-  const VERSION = 'web-0.5.2';
+  const VERSION = 'web-0.5.3';
 
   const sections = [
     { id: 'section-metadata', label: 'Metadata', x: 10, y: 10, w: 190, h: 22 },
@@ -47,68 +47,47 @@
   function path(d, extra = {}) { return `<path ${attrs({ d, ...extra })} />`; }
   function text(x, y, content, size = 3, extra = {}) { return `<text ${attrs({ x, y, 'font-size': size, ...extra })}>${escapeXml(content)}</text>`; }
 
-  const vectorGlyphs = {
-    A: ['01110', '10001', '10001', '11111', '10001', '10001', '10001'],
-    B: ['11110', '10001', '10001', '11110', '10001', '10001', '11110'],
-    C: ['01111', '10000', '10000', '10000', '10000', '10000', '01111'],
-    I: ['11111', '00100', '00100', '00100', '00100', '00100', '11111'],
-    O: ['01110', '10001', '10001', '10001', '10001', '10001', '01110'],
-    P: ['11110', '10001', '10001', '11110', '10000', '10000', '10000'],
-    T: ['11111', '00100', '00100', '00100', '00100', '00100', '00100'],
-    a: ['00000', '00000', '01110', '00001', '01111', '10001', '01111'],
-    b: ['10000', '10000', '11110', '10001', '10001', '10001', '11110'],
-    c: ['00000', '00000', '01111', '10000', '10000', '10000', '01111'],
-    l: ['00100', '00100', '00100', '00100', '00100', '00100', '00110'],
-    0: ['01110', '10001', '10011', '10101', '11001', '10001', '01110'],
-    1: ['00100', '01100', '00100', '00100', '00100', '00100', '01110'],
-    2: ['01110', '10001', '00001', '00010', '00100', '01000', '11111'],
-    3: ['11110', '00001', '00001', '01110', '00001', '00001', '11110'],
-    8: ['01110', '10001', '10001', '01110', '10001', '10001', '01110'],
+  const strokeGlyphs = {
+    P: [[[0.00, 1.00], [0.00, 0.00], [0.58, 0.00], [0.72, 0.14], [0.72, 0.38], [0.58, 0.52], [0.00, 0.52]]],
+    C: [[[0.72, 0.10], [0.55, 0.00], [0.18, 0.00], [0.00, 0.20], [0.00, 0.80], [0.18, 1.00], [0.55, 1.00], [0.72, 0.90]]],
+    T: [[[0.00, 0.00], [0.78, 0.00]], [[0.39, 0.00], [0.39, 1.00]]],
+    a: [[[0.62, 0.42], [0.50, 0.30], [0.18, 0.30], [0.02, 0.48], [0.02, 0.82], [0.18, 1.00], [0.50, 1.00], [0.62, 0.84]], [[0.62, 0.32], [0.62, 1.00]]],
+    b: [[[0.00, 0.00], [0.00, 1.00]], [[0.00, 0.40], [0.42, 0.32], [0.66, 0.52], [0.66, 0.82], [0.42, 1.00], [0.00, 0.92]]],
+    c: [[[0.62, 0.42], [0.45, 0.30], [0.15, 0.34], [0.00, 0.55], [0.00, 0.78], [0.15, 0.98], [0.45, 1.00], [0.62, 0.88]]],
+    I: [[[0.00, 0.00], [0.58, 0.00]], [[0.29, 0.00], [0.29, 1.00]], [[0.00, 1.00], [0.58, 1.00]]],
+    l: [[[0.20, 0.00], [0.20, 0.92], [0.42, 1.00]]],
+    O: [[[0.36, 0.00], [0.10, 0.08], [0.00, 0.30], [0.00, 0.70], [0.10, 0.92], [0.36, 1.00], [0.62, 0.92], [0.72, 0.70], [0.72, 0.30], [0.62, 0.08], [0.36, 0.00]]],
+    0: [[[0.36, 0.00], [0.10, 0.08], [0.00, 0.30], [0.00, 0.70], [0.10, 0.92], [0.36, 1.00], [0.62, 0.92], [0.72, 0.70], [0.72, 0.30], [0.62, 0.08], [0.36, 0.00]], [[0.16, 0.86], [0.56, 0.14]]],
+    1: [[[0.16, 0.20], [0.36, 0.00], [0.36, 1.00]], [[0.16, 1.00], [0.56, 1.00]]],
+    2: [[[0.06, 0.22], [0.20, 0.04], [0.52, 0.04], [0.68, 0.22], [0.60, 0.44], [0.06, 1.00], [0.70, 1.00]]],
+    3: [[[0.06, 0.08], [0.62, 0.08], [0.38, 0.48], [0.62, 0.48], [0.70, 0.72], [0.58, 0.94], [0.18, 0.98], [0.02, 0.84]]],
+    8: [[[0.36, 0.00], [0.12, 0.06], [0.04, 0.24], [0.12, 0.42], [0.36, 0.50], [0.60, 0.42], [0.68, 0.24], [0.60, 0.06], [0.36, 0.00]], [[0.36, 0.50], [0.10, 0.58], [0.02, 0.78], [0.14, 0.96], [0.36, 1.00], [0.58, 0.96], [0.70, 0.78], [0.62, 0.58], [0.36, 0.50]]],
   };
 
-  function vectorGlyph(x, baselineY, char, height, extra = {}) {
-    if (char === ' ') return [];
-    const rows = vectorGlyphs[char] || vectorGlyphs[char.toUpperCase()] || vectorGlyphs.C;
-    const unit = height / 7;
-    const topY = baselineY - height;
-    const segments = [];
-    rows.forEach((row, ry) => {
-      let start = -1;
-      for (let cx = 0; cx <= row.length; cx += 1) {
-        if (row[cx] === '1' && start === -1) start = cx;
-        if ((row[cx] !== '1' || cx === row.length) && start !== -1) {
-          segments.push(line(Math.round((x + start * unit) * 100) / 100, Math.round((topY + ry * unit) * 100) / 100, Math.round((x + cx * unit) * 100) / 100, Math.round((topY + ry * unit) * 100) / 100, extra));
-          start = -1;
-        }
-      }
-    });
-    for (let cx = 0; cx < 5; cx += 1) {
-      let start = -1;
-      for (let ry = 0; ry <= 7; ry += 1) {
-        const on = ry < 7 && rows[ry][cx] === '1';
-        if (on && start === -1) start = ry;
-        if ((!on || ry === 7) && start !== -1) {
-          segments.push(line(Math.round((x + cx * unit) * 100) / 100, Math.round((topY + start * unit) * 100) / 100, Math.round((x + cx * unit) * 100) / 100, Math.round((topY + ry * unit) * 100) / 100, extra));
-          start = -1;
-        }
-      }
-    }
-    return segments;
-  }
+  function fmt(value) { return Number(value.toFixed(2)).toString(); }
 
-  function vectorText(x, baselineY, content, height, extra = {}) {
+  function strokeText(x, baselineY, content, height, extra = {}) {
     const body = [];
     const advance = height * 0.78;
-    const lineAttrs = {
-      fill: extra.fill,
-      stroke: extra.stroke,
-      'stroke-width': extra['stroke-width'],
-    };
-    [...String(content)].forEach((char, index) => {
-      body.push(...vectorGlyph(x + index * advance, baselineY, char, height, lineAttrs));
+    let cursor = x;
+    const pathAttrs = { fill: extra.fill, stroke: extra.stroke, 'stroke-width': extra['stroke-width'] };
+    [...String(content)].forEach((char) => {
+      if (char === ' ') { cursor += advance * 0.65; return; }
+      const glyph = strokeGlyphs[char] || strokeGlyphs[char.toUpperCase()] || strokeGlyphs.C;
+      const parts = [];
+      glyph.forEach((stroke) => {
+        stroke.forEach(([gx, gy], index) => {
+          const px = cursor + gx * height;
+          const py = baselineY - height + gy * height;
+          parts.push(`${index === 0 ? 'M' : 'L'} ${fmt(px)} ${fmt(py)}`);
+        });
+      });
+      body.push(path(parts.join(' '), pathAttrs));
+      cursor += advance;
     });
     return `<g ${attrs(extra)}>\n${body.join('\n')}\n</g>`;
   }
+
 
   function plotSection(sectionId, body) { return `<g id="${sectionId}" data-layer="plot-data">\n${body.join('\n')}\n</g>`; }
   function styleFor(kind) {
@@ -235,7 +214,7 @@
       [1, x + 55, y + 32, 'Il1 O0 8B'],
       [0.8, x + 55, y + 40, 'Il1 O0 8B'],
     ].forEach(([size, xx, yy, sample]) => {
-      body.push(vectorText(xx, yy, sample, size, { fill: 'none', stroke: '#000', 'stroke-width': '0.12', 'data-test': `text-size-${size.toFixed(1)}mm`, 'data-sample': sample }));
+      body.push(strokeText(xx, yy, sample, size, { fill: 'none', stroke: '#000', 'stroke-width': '0.12', 'data-test': `text-size-${size.toFixed(1)}mm`, 'data-sample': sample, 'data-glyph-style': 'single-line-stroke' }));
     });
     return plotSection('section-text-sizes', body);
   }

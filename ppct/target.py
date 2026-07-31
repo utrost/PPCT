@@ -7,7 +7,7 @@ from xml.sax.saxutils import escape
 A4_WIDTH_MM = 210
 A4_HEIGHT_MM = 297
 MARGIN_MM = 10
-GENERATOR_VERSION = "0.5.2"
+GENERATOR_VERSION = "0.5.3"
 
 
 @dataclass(frozen=True)
@@ -64,6 +64,53 @@ def _circle(cx: float, cy: float, r: float, **attrs: object) -> str:
 
 def _path(d: str, **attrs: object) -> str:
     return f"<path {_attrs(d=d, **attrs)} />"
+
+
+# Simple single-line stroke glyphs for the plotted text-size diagnostics.
+# Coordinates are normalized to a 1.0 glyph height. Each nested list is one
+# continuous pen stroke, so plotted letters are stroke-like rather than a
+# dot-matrix/pixel-font approximation.
+STROKE_GLYPHS: dict[str, list[list[tuple[float, float]]]] = {
+    "P": [[(0.00, 1.00), (0.00, 0.00), (0.58, 0.00), (0.72, 0.14), (0.72, 0.38), (0.58, 0.52), (0.00, 0.52)]],
+    "C": [[(0.72, 0.10), (0.55, 0.00), (0.18, 0.00), (0.00, 0.20), (0.00, 0.80), (0.18, 1.00), (0.55, 1.00), (0.72, 0.90)]],
+    "T": [[(0.00, 0.00), (0.78, 0.00)], [(0.39, 0.00), (0.39, 1.00)]],
+    "a": [[(0.62, 0.42), (0.50, 0.30), (0.18, 0.30), (0.02, 0.48), (0.02, 0.82), (0.18, 1.00), (0.50, 1.00), (0.62, 0.84)], [(0.62, 0.32), (0.62, 1.00)]],
+    "b": [[(0.00, 0.00), (0.00, 1.00)], [(0.00, 0.40), (0.42, 0.32), (0.66, 0.52), (0.66, 0.82), (0.42, 1.00), (0.00, 0.92)]],
+    "c": [[(0.62, 0.42), (0.45, 0.30), (0.15, 0.34), (0.00, 0.55), (0.00, 0.78), (0.15, 0.98), (0.45, 1.00), (0.62, 0.88)]],
+    "I": [[(0.00, 0.00), (0.58, 0.00)], [(0.29, 0.00), (0.29, 1.00)], [(0.00, 1.00), (0.58, 1.00)]],
+    "l": [[(0.20, 0.00), (0.20, 0.92), (0.42, 1.00)]],
+    "O": [[(0.36, 0.00), (0.10, 0.08), (0.00, 0.30), (0.00, 0.70), (0.10, 0.92), (0.36, 1.00), (0.62, 0.92), (0.72, 0.70), (0.72, 0.30), (0.62, 0.08), (0.36, 0.00)]],
+    "0": [[(0.36, 0.00), (0.10, 0.08), (0.00, 0.30), (0.00, 0.70), (0.10, 0.92), (0.36, 1.00), (0.62, 0.92), (0.72, 0.70), (0.72, 0.30), (0.62, 0.08), (0.36, 0.00)], [(0.16, 0.86), (0.56, 0.14)]],
+    "1": [[(0.16, 0.20), (0.36, 0.00), (0.36, 1.00)], [(0.16, 1.00), (0.56, 1.00)]],
+    "2": [[(0.06, 0.22), (0.20, 0.04), (0.52, 0.04), (0.68, 0.22), (0.60, 0.44), (0.06, 1.00), (0.70, 1.00)]],
+    "3": [[(0.06, 0.08), (0.62, 0.08), (0.38, 0.48), (0.62, 0.48), (0.70, 0.72), (0.58, 0.94), (0.18, 0.98), (0.02, 0.84)]],
+    "8": [[(0.36, 0.00), (0.12, 0.06), (0.04, 0.24), (0.12, 0.42), (0.36, 0.50), (0.60, 0.42), (0.68, 0.24), (0.60, 0.06), (0.36, 0.00)], [(0.36, 0.50), (0.10, 0.58), (0.02, 0.78), (0.14, 0.96), (0.36, 1.00), (0.58, 0.96), (0.70, 0.78), (0.62, 0.58), (0.36, 0.50)]],
+}
+
+
+def _format_number(value: float) -> str:
+    return f"{value:.2f}".rstrip("0").rstrip(".")
+
+
+def _stroke_text(x: float, baseline_y: float, content: str, height: float, **attrs: object) -> str:
+    paths: list[str] = []
+    cursor = x
+    advance = height * 0.78
+    for char in content:
+        if char == " ":
+            cursor += advance * 0.65
+            continue
+        glyph = STROKE_GLYPHS.get(char) or STROKE_GLYPHS.get(char.upper()) or STROKE_GLYPHS["C"]
+        d_parts: list[str] = []
+        for stroke in glyph:
+            for index, (gx, gy) in enumerate(stroke):
+                px = cursor + gx * height
+                py = baseline_y - height + gy * height
+                command = "M" if index == 0 else "L"
+                d_parts.append(f"{command} {_format_number(px)} {_format_number(py)}")
+        paths.append(_path(" ".join(d_parts), **attrs))
+        cursor += advance
+    return "\n".join(paths)
 
 
 def _group(group_id: str, label: str, x: float, y: float, width: float, height: float, body: list[str]) -> str:
@@ -186,7 +233,11 @@ def _text_sizes() -> str:
         (0.8, x + 55, y + 40, "Il1 O0 8B"),
     ]
     for size, xx, yy, sample in samples:
-        body.append(_text(xx, round(yy, 2), sample, size, font_family="monospace", data_test=f"text-size-{size:.1f}mm"))
+        body.append(
+            f'<g data-test="text-size-{size:.1f}mm" data-sample="{escape(sample)}" data-glyph-style="single-line-stroke">'
+        )
+        body.append(_stroke_text(xx, round(yy, 2), sample, size, fill="none", stroke="#000", stroke_width="0.12"))
+        body.append("</g>")
         body.append(_text(xx, round(yy + 3.2, 2), f"{size:g}mm", 1.6, font_family="monospace"))
     return _group("section-text-sizes", "Minimum Text Size", x, y, w, h, body)
 
