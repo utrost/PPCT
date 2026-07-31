@@ -64,6 +64,19 @@ class TargetGenerationTests(unittest.TestCase):
         self.assertIn('data-test="text-size-6.0mm"', svg)
         self.assertIn('data-test="text-size-5.0mm"', svg)
         self.assertIn('data-test="text-size-0.8mm"', svg)
+        self.assertIn('data-glyph-style="single-line-stroke"', svg)
+        self.assertIn('data-sample="Il1 O0 8B"', svg)
+        root = ET.fromstring(svg)
+        text_groups = [
+            element
+            for element in root.iter()
+            if element.attrib.get("data-glyph-style") == "single-line-stroke"
+        ]
+        self.assertTrue(text_groups)
+        for group in text_groups:
+            child_tags = {child.tag.split("}")[-1] for child in group}
+            self.assertIn("path", child_tags)
+            self.assertNotIn("line", child_tags)
         self.assertIn("Il1 O0 8B", svg)
         self.assertIn('data-test="concentric-closed-0.5mm"', svg)
         self.assertIn('data-test="concentric-spiral-0.5mm"', svg)

@@ -105,13 +105,14 @@ Curves often reveal speed and acceleration issues faster than straight lines. Co
 
 ## Minimum Text Size
 
-Purpose: find the smallest usable plotted SVG text size for this pen/paper/plotter setup.
+Purpose: find the smallest usable plotted single-line text size for this pen/paper/plotter setup.
 
 Current marks:
 
-- `PPCT 123` at 6 and 5 mm text sizes, added after the first printed sheet showed that larger readability anchors were useful
-- `PPCT abc 123` at 4, 3, 2, and 1.5 mm text sizes
-- `Il1 O0 8B` at 1 and 0.8 mm text sizes
+- Stroke-glyph `PPCT 123` at 6 and 5 mm text sizes, added after the first printed sheet showed that larger readability anchors were useful
+- Stroke-glyph `PPCT abc 123` at 4, 3, 2, and 1.5 mm text sizes
+- Stroke-glyph `Il1 O0 8B` at 1 and 0.8 mm text sizes
+- The plotted letters use continuous path strokes rather than dot-matrix/pixel-glyph segments, so the diagnostic is closer to realistic pen lettering
 - A text-height axis labelled in millimetres
 
 Look for:
@@ -176,7 +177,7 @@ A future metadata schema should cover these fields.
 test:
   date: "2026-07-29"
   operator: ""
-  ppct_version: "0.5.2"
+  ppct_version: "0.5.3"
   svg_file: "ppct-a4.svg"
 pen:
   manufacturer: ""

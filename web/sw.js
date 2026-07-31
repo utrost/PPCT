@@ -1,4 +1,4 @@
-const CACHE = 'ppct-web-v0.5.2';
+const CACHE = 'ppct-web-v0.5.3';
 const ASSETS = [
   './',
   './index.html',
