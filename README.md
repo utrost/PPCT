@@ -53,6 +53,7 @@ A generated example is included at [`examples/ppct-a4.svg`](examples/ppct-a4.svg
 ## Physical test references
 
 - [`docs/test-results/2026-07-31-hema-0-4-fineliner.md`](docs/test-results/2026-07-31-hema-0-4-fineliner.md): actual A4 reference run with a purple HEMA 0.4 mm fineliner. The photo shows the first useful thing PPCT caught: a heavy ink blob at the starting/fill area.
+- [`docs/test-results/2026-07-31-hema-2mm.md`](docs/test-results/2026-07-31-hema-2mm.md): actual A4 reference run with a magenta HEMA 2 mm marker. Large marks are usable; fine text and dense panels get crowded quickly.
 
 ## What the target contains
 
