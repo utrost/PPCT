@@ -50,6 +50,10 @@ Open or print the SVG at 100% scale. Do not fit to page. Scaling defeats the geo
 
 A generated example is included at [`examples/ppct-a4.svg`](examples/ppct-a4.svg).
 
+## Physical test references
+
+- [`docs/test-results/2026-07-31-hema-0-4-fineliner.md`](docs/test-results/2026-07-31-hema-0-4-fineliner.md): actual A4 reference run with a purple HEMA 0.4 mm fineliner. The photo shows the first useful thing PPCT caught: a heavy ink blob at the starting/fill area.
+
 ## What the target contains
 
 The current A4 sheet contains these sections:
